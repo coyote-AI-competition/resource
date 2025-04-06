@@ -88,7 +88,11 @@ max→0-------×1 101 場に出ているカードの中で最大の数を１つ�
 turn の数、誰がやったか、action(宣言した数)
 
 ```
-[{'turn_count': 0, 'turn_player': 'PreAI1', 'action': 8}, {'turn_count': 1, 'turn_player': 'PreAI2', 'action': 9}, {'turn_count': 2, 'turn_player': 'PreAI1', 'action': 14}, {'turn_count': 3, 'turn_player': 'PreAI2', 'action': 17}, {'turn_count': 4, 'turn_player': 'PreAI1', 'action': 25}]
+[{'turn_count': 0, 'turn_player': 'PreAI1', 'action': 8}, 
+ {'turn_count': 1, 'turn_player': 'PreAI2', 'action': 9},
+ {'turn_count': 2, 'turn_player': 'PreAI1', 'action': 14},
+ {'turn_count': 3, 'turn_player': 'PreAI2', 'action': 17},
+{'turn_count': 4, 'turn_player': 'PreAI1', 'action': 25}]
 ```
 
 ##### others_info -> list
@@ -100,7 +104,10 @@ is_next : 次のターンの人か
 is_prev : 前のターンの人か
 
 ```
-[{'name': 'PreAI2', 'card_info': None, 'life': 2, 'is_next': True, 'is_prev': False}, {'name': 'AI_4', 'card_info': None, 'life': 1, 'is_next': False, 'is_prev': True}]
+[
+    {'name': 'PreAI2', 'card_info': None, 'life': 2, 'is_next': True, 'is_prev': False},
+    {'name': 'AI_4', 'card_info': None, 'life': 1, 'is_next': False, 'is_prev': True}
+]
 ```
 
 ##### sum -> int
