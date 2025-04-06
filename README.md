@@ -67,6 +67,9 @@ arena.py
 
 ### Websocket通信
 
+WebSocket通信で行う場合も同様な関数を持つクラスを作成してください。
+ただし継承するクラスは`client/sample_arena_client.py`の`SampleClient`ではなく、`client/websocket_client.py`の`WebSocketClient`を継承してください。このクラスは、WebSocket通信を行うためのクライアントクラスです。基本的にarena.pyでの実行と同じように実装することが出来ます。
+
 - server の立ち上げ
 
 ```
