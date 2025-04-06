@@ -1,4 +1,20 @@
 # Coyote AI competition jack with C0de
+## 目次
+- [Coyote AI competition jack with C0de](#coyote-ai-competition-jack-with-c0de)
+  - [目次](#目次)
+  - [Coyote AI competition](#coyote-ai-competition)
+- [coyote開発方法](#coyote開発方法)
+  - [環境構築](#環境構築)
+  - [開発方法](#開発方法)
+    - [AIの実装](#aiの実装)
+    - [arena.pyでの実行](#arenapyでの実行)
+    - [Websocket通信](#websocket通信)
+  - [AI\_player\_action の引数説明](#ai_player_action-の引数説明)
+        - [log -\> list](#log---list)
+        - [others\_info -\> list](#others_info---list)
+        - [sum -\> int](#sum---int)
+        - [actions -\> int](#actions---int)
+
 
 ## Coyote AI competition
 ドキュメント構造
