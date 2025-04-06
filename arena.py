@@ -1,5 +1,4 @@
 from server.arena import Arena
-from client.not_websocket_client import Client as LocalClient
 if __name__ == "__main__":
       # -- Example usage --
     #

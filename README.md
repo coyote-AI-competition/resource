@@ -1,15 +1,51 @@
-# coyote websocket
+# Coyote AI competition jack with C0de
+
+## Coyote AI competition
+ドキュメント構造
+
+- README.md コヨーテ AI competition のGitHubでのAI対戦のさせ方などが乗っています。
+- cAc.md コヨーテAI competition のルールや,大会概要・環境構築が乗っています。
+
+
+
+# coyote開発方法
+
+## 環境構築
+
+Singularityまたは、WSL2のPython3.12環境で以下のコマンドをたたいてください。
+
+コマンドは
+```bash
+source ./setup.sh
+```
+二回目以降でターミナル開いたときはSingularityのコンテナに入り、
+```bash
+source ./setup_session.sh
+```
+を行ってください。
+
+## 開発方法
+
+### AIの実装
+AIの実装は、`client/sample_arena_client.py`にを参考にしてrootディレクトリに[チーム名もしくはユーザー名].pyを作成してください。
+AIの実装は、`AI_player_action`メソッドをオーバーライドすることで行います。
+このメソッドは、AIが行うアクションを決定するためのものです。
+
+
 
 ### how to test in arena(not websocket)
 
-事前に作った AI で遊びたい場合は、以下のように追加してください！
+事前に作った AI でプレイしたい場合は、以下のように追加してください！
 
-```
+arena.py 
+
+```python
  from client.sample_arena_client import SampleClient as SampleClient
 
     predefs = [
         [SampleClient(player_name="PreAI1", is_ai=True), "PreAI1"],
         [SampleClient(player_name="PreAI2", is_ai=True), "PreAI2"]
+        # ここに作ったクライアントを追加していく-> これが基本の設定になる
     ]
 
     arena = Arena(total_matches=5, predefined_clients=predefs)
@@ -22,7 +58,7 @@
 /$ python3 arena.py
 ```
 
-### how to test
+### Websocket通信
 
 - server の立ち上げ
 
@@ -33,7 +69,7 @@
 - client の立ち上げ
 
 ```
-/client$ python3 client.py
+/client$ python3 main.py
 ```
 
 ```
