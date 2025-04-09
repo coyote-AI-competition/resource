@@ -2,11 +2,37 @@ import pyspiel
 import numpy as np
 import coyote
 from open_spiel.python.algorithms import external_sampling_mccfr
-from open_spiel.python.algorithms import exploitability
+from open_spiel.python.algorithms import get_all_states
 import random
 import time
 
-_NUM_PLAYERS = 2
+import csv
+
+def export_policy_to_csv(policy, game, file_path="policy_output.csv"):
+    all_states = get_all_states.get_all_states(
+        game,
+        include_terminals=False,
+        include_chance_states=False,
+    )
+
+    with open(file_path, mode="w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["infostate", "action", "probability"])
+
+        for state_key, state in all_states.items():
+            if state.is_terminal():
+                continue
+            player = state.current_player()
+            if player == pyspiel.PlayerId.CHANCE or player == pyspiel.PlayerId.TERMINAL:
+                continue
+            infostate = state.information_state_string(player)
+            action_probs = policy.action_probabilities(state)
+            for action, prob in action_probs.items():
+                writer.writerow([infostate, action, prob])
+    
+    print(f"✅ Policy exported to {file_path}")
+
+_NUM_PLAYERS = 4  # プレイヤー数
 _NUM_DECLARATIONS = 121  # 宣言の最大値
 
 _GAME_TYPE = pyspiel.GameType(
@@ -17,7 +43,7 @@ _GAME_TYPE = pyspiel.GameType(
     information=pyspiel.GameType.Information.IMPERFECT_INFORMATION,
     utility=pyspiel.GameType.Utility.ZERO_SUM,
     reward_model=pyspiel.GameType.RewardModel.TERMINAL,
-    max_num_players=2,
+    max_num_players=4,
     min_num_players=2,
     provides_information_state_string=True,
     provides_information_state_tensor=False,
@@ -30,7 +56,7 @@ _GAME_TYPE = pyspiel.GameType(
 
 
 _GAME_INFO = pyspiel.GameInfo(
-    num_distinct_actions=_NUM_DECLARATIONS + 1,  # 宣言 + チャレンジ
+    num_distinct_actions=2,  # 宣言 + チャレンジ
     max_chance_outcomes=0,
     num_players=_NUM_PLAYERS,
     min_utility=-1.0,
@@ -45,7 +71,7 @@ class CoyoteState(pyspiel.State):
         super().__init__(game)
         self._cur_player = 0
         self._is_terminal = False
-        self._player_lives = [3] * _NUM_PLAYERS
+        self._player_lives = [1] * _NUM_PLAYERS
         self._player_active = [True] * _NUM_PLAYERS
         self.current_declaration = 0
         self.last_declarer = None
@@ -64,15 +90,17 @@ class CoyoteState(pyspiel.State):
         return pyspiel.PlayerId.TERMINAL if self._is_terminal else self._cur_player
 
     def _legal_actions(self, player):
-        if not self._player_active[player]:
-            return []
+        # if not self._player_active[player]:
+        #     return []
         if self.last_declarer is None: 
-            return [self.current_declaration+1]
-        actions = [self.current_declaration+1, _NUM_DECLARATIONS]
+            return [0]  # 最初のプレイヤーは宣言のみ
+        if self.current_declaration >= _NUM_DECLARATIONS - 1:
+            return [1]
+        actions = [0, 1] # 0: 宣言, 1: チャレンジ
         return actions
     
     def _apply_action(self, action):
-        if action == _NUM_DECLARATIONS:  # チャレンジ
+        if action == 1:  # チャレンジ
             print(f"Player {self._cur_player} challenges with declaration {self.current_declaration}.")
             true_total = coyote.game.convert_card(self, self._cards, False, self.deck)
             if self.current_declaration > true_total:
@@ -91,28 +119,30 @@ class CoyoteState(pyspiel.State):
             self._cards = [self.deck.draw() if self._player_active[i] else 0 for i in range(_NUM_PLAYERS)]  # 新しいカードを配る
             print(f"New cards: {self._cards}")
         else:
-            print(f"Player {self._cur_player} declares {action}.")
-            self.current_declaration = action
+            print(f"Player {self._cur_player} declares {self.current_declaration+1}.")
+            self.current_declaration = self.current_declaration + 1
             self.last_declarer = self._cur_player
         self._cur_player = (self._cur_player + 1) % _NUM_PLAYERS
+        while not self._player_active[self._cur_player]:
+            self._cur_player = (self._cur_player + 1) % _NUM_PLAYERS
 
     def is_terminal(self):
         return self._is_terminal
 
     def returns(self):
-        if not self._is_terminal:
-            return [0.0] * _NUM_PLAYERS
-        winner = self._player_active.index(True)
-        return [_NUM_PLAYERS - 1 if i == winner else -1.0 for i in range(_NUM_PLAYERS)]
+        survive = sum(self._player_active)
+        points = _NUM_PLAYERS - survive
+        return [points/survive if self._player_active[i] else -1 for i in range(_NUM_PLAYERS)]
     
     def information_state_string(self, player):
         # 自分のカードは「?」、他人のカードは見える
-        visible_cards = [str(c) if i != player else "?" for i, c in enumerate(self._cards)]
-        lives = ",".join(map(str, self._player_lives))
-        return f"cards:{','.join(visible_cards)}|decl:{self.current_declaration}|lives:{lives}"
+        visible_cards = sorted([str(c) if i != player else "?" for i, c in enumerate(self._cards) if self._player_active[i]])
+        # mylives = self._player_lives[player]
+        live = ",".join([str(l) for l in self._player_lives])
+        return f"cards:{','.join(visible_cards)}|decl:{self.current_declaration}"
 
     def __str__(self):
-        return f"Cards: {self._cards}\nLives: {self._player_lives}\nCurrent declaration: {self.current_declaration}"
+        return f"Cards: {self._cards}\nCurrent declaration: {self.current_declaration}\nLives: {self._player_lives}\nActive players: {self._player_active}"
 
 
 class CoyoteObserver:
@@ -121,7 +151,7 @@ class CoyoteObserver:
 
     def set_from(self, state: CoyoteState, player: int):
         visible = [str(card) if i != player else "?" for i, card in enumerate(state._cards)]
-        self.obs_str = f"Visible cards: {visible}\nDeclaration: {state.current_declaration}\nLives: {state._player_lives}"
+        self.obs_str = f"Visible cards: {visible}\nDeclaration: {state.current_declaration}"
 
     def string_from(self, state: CoyoteState, player: int):
         self.set_from(state, player)
@@ -151,16 +181,14 @@ if __name__ == "__main__":
 
     solver = external_sampling_mccfr.ExternalSamplingSolver(game)
 
-    NUM_ITERATIONS = 1
+    NUM_ITERATIONS = 100
 
     for i in range(NUM_ITERATIONS):
         solver.iteration()
-        if i % 1000 == 0:
-            avg_policy = solver.average_policy()
-            nash_conv = exploitability.nash_conv(game, avg_policy)
-            print(f"Iteration {i}, NashConv = {nash_conv}")
+        # if i % 1000 == 0:
+        #     avg_policy = solver.average_policy()
+        #     nash_conv = exploitability.nash_conv(game, avg_policy)
+        #     print(f"Iteration {i}, NashConv = {nash_conv}")
 
-    average_policy = solver.average_policy()
-
-    for state in game.new_initial_state().legal_actions():
-        print(f"Action {state}: {average_policy.action_probabilities(state)}")
+    avg_policy = solver.average_policy()
+    export_policy_to_csv(avg_policy, game, "policy_output.csv")
