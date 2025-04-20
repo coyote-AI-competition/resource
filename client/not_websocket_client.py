@@ -22,14 +22,15 @@ class Client:
     def handle_turn(self, turn_data):
         """
         プレイヤーがターンで行動 
-        {
-                            "header": "turn",
-                            "player_sid": turn_player_sid,
-                            "others_info": others_info,
-                            "sum": sum([player["card_info"] for player in others_info]),
-                            "log": log_info,
-                            "legal_action": legal_action
-                        },
+        turn_data = {
+            "header": "turn",
+            "player_sid": None,  # 実際は使わない
+            "others_info": self.get_others_info(current_player, self.active_players),
+            "sum": sum_of_others,
+            "round_num": self.round_num,
+            "log": self.logs["round_info"][-1]["turn_info"],  # これまでのturnログ
+            "legal_action": legal_actions
+        }
         """
         others_info = turn_data["others_info"]
         # tqdm.write(f"Other players: {others_info}")
@@ -38,6 +39,7 @@ class Client:
         log_info = turn_data["log"]
         # tqdm.write(f"Log: {log_info}")　// ログは長いのでコメントアウト
         legal_actions = turn_data["legal_action"]
+        round_num = turn_data["round_num"]
         # tqdm.write(f"Possible actions: {legal_actions}")
 
         min_range = legal_actions[1]
@@ -50,7 +52,7 @@ class Client:
         tqdm.write(f"{self.player_name} :Possible actions: {actions}")
         #プレイヤーに引数を渡す
         if self.is_ai: #AIの場合
-            action = self.AI_player_action(others_info,sum,log_info, actions)
+            action = self.AI_player_action(others_info,sum,log_info, actions, round_num)
             if action not in actions: #アクションが不正な場合
                 return -1
             tqdm.write(f"{self.player_name} selected action: {action}")
