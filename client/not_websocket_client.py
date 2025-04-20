@@ -39,7 +39,7 @@ class Client:
         log_info = turn_data["log"]
         # tqdm.write(f"Log: {log_info}")　// ログは長いのでコメントアウト
         legal_actions = turn_data["legal_action"]
-        # round_num = turn_data["round_num"]
+        round_num = turn_data["round_num"]
         # tqdm.write(f"Possible actions: {legal_actions}")
 
         min_range = legal_actions[1]
@@ -52,7 +52,7 @@ class Client:
         tqdm.write(f"{self.player_name} :Possible actions: {actions}")
         #プレイヤーに引数を渡す
         if self.is_ai: #AIの場合
-            action = self.AI_player_action(others_info,sum,log_info, actions)
+            action = self.AI_player_action(others_info,sum,log_info, actions, round_num)
             if action not in actions: #アクションが不正な場合
                 return -1
             tqdm.write(f"{self.player_name} selected action: {action}")
