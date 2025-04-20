@@ -64,7 +64,7 @@ class Client:
 
     # playerに引数を渡し、actionという返り値を受け取る
     # ここではactionを仮に1000としてlegal_actionの範囲外の値を返す
-    def AI_player_action(self,others_info,sum,log, actions):
+    def AI_player_action(self,others_info,sum,log, actions,round_num):
         action = random.choice(actions)
         return action
     
