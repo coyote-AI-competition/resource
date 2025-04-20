@@ -1,6 +1,6 @@
 from server.arena import Arena
 if __name__ == "__main__":
-      # -- Example usage --
+    # -- Example usage --
     #
     # もし事前に定義したクライアントを渡したい場合:
     #
@@ -8,10 +8,7 @@ if __name__ == "__main__":
     
     predefs = [
         [SampleClient(player_name="PreAI1", is_ai=True), "PreAI1"],
-        [SampleClient(player_name="PreAI2", is_ai=True), "PreAI2"],
-        [SampleClient(player_name="PreAI2", is_ai=True), "PreAI3"],
-        [SampleClient(player_name="PreAI2", is_ai=True), "PreAI4"],
-        [SampleClient(player_name="PreAI2", is_ai=True), "PreAI5"]
+        [SampleClient(player_name="PreAI2", is_ai=True), "PreAI2"]
     ]
     
     arena = Arena(total_matches=5, predefined_clients=predefs)

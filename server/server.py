@@ -31,7 +31,7 @@ class Room:
         self.observers = [] # [sid, sid, ...]
         self.active_players = []  # [(sid, name, is_ai), ...]
         self.death_players = []  # [(sid, name, is_ai), ...]
-        self.start_players = [] # [sid, ...]
+        self.start_players = [] # [(sid, name, is_ai), ...]
         self.logs = {"round_info": []} # logの形式を変更
         self.current_turn_index = 0  # 誰のターンか管理
         self.current_game_index = 0  # 何ゲーム目か管理
@@ -72,13 +72,22 @@ class Room:
         self.current_turn_index += 1
         
     def add_player(self, sid, player_name,is_ai=False):
-        self.players[sid] = {"life": 3, "card": 0, "name": player_name, "win_num": 0, "is_ai": is_ai, "others_card_sum" : 0}
-        self.active_players.append((sid, player_name, is_ai))
+        if self.is_started:
+            # ゲーム中
+            if sid in self.players.keys():
+                # 再接続
+                self.active_players.append((sid, player_name, is_ai))
+            else:
+                # ゲーム中に接続
+                pass
+        else:
+            # ゲーム開始前
+            self.players[sid] = {"life": 3, "card": 0, "name": player_name, "win_num": 0, "is_ai": is_ai, "others_card_sum" : 0}
+            self.active_players.append((sid, player_name, is_ai))
 
     def remove_player(self, player_sid):
-            self.players.pop(player_sid, None)
+            # self.players.pop(player_sid, None)
             self.active_players = [(sid, name, is_ai) for sid, name,is_ai in self.active_players if sid != player_sid]
-        
         
     def start_new_round(self,round_num):
         # deck を入れる
@@ -100,15 +109,17 @@ class Room:
         self.current_turn_index = 0
         
     def get_next_turn_player(self):
-        if self.active_players:
-            return (self.active_players[self.current_turn_index % len(self.active_players)][0],  self.active_players[self.current_turn_index % len(self.active_players)][2]) # sid,is_ai を返す
+        if self.start_players:
+            return (self.start_players[self.current_turn_index % len(self.start_players)][0],  self.start_players[self.current_turn_index % len(self.start_players)][2]) # sid,is_ai を返す
         return None
+    #TODO
     
     # lifeが0になったプレイヤーをactive_playersから削除
     def death_player(self, player_sid): #TODO
         player_name = self.players[player_sid]['name']
         self.active_players = [(sid, name, is_ai) for sid, name, is_ai in self.active_players if sid != player_sid]
         self.death_players = [(sid, name, is_ai) for sid, name, is_ai in self.active_players if sid == player_sid]
+        self.start_players = [(sid, name, is_ai) for sid, name, is_ai in self.active_players if sid != player_sid]
         print(f"{player_name} has died!")
     
     # 仮
@@ -127,7 +138,7 @@ class Log:
         log_folder = "./log/"
         retry_count = 0
 
-               # ログフォルダが存在しない場合は作成
+        # ログフォルダが存在しない場合は作成
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)
 
@@ -263,7 +274,7 @@ class Server(RoomManager):
         
         # すでにルームが存在するか確認
         room = self.rooms.get_room(room_id)
-        if sid not in room.start_players and room.is_start:
+        if room and room.is_started and sid not in [i[0] for i in room.start_players]:
             is_observer = True
         print("run join room")
         if not is_observer:
@@ -336,7 +347,7 @@ class Server(RoomManager):
             # プレイヤーのステータスをリセット
             # すべてのプレイヤーをアクティブに
             room.active_players = [(sid, player_data["name"], player_data["is_ai"]) for sid, player_data in room.players.items()]
-            room.start_players = [sid for sid,_ in room.active_players]
+            room.start_players = room.active_players.copy()
             print(f"room.active_players: {room.active_players}")
             for player_id in room.players:
                 room.players[player_id]['life'] = room.initial_life  # 初期ライフに戻す

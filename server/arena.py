@@ -232,6 +232,7 @@ class Arena:
                 "player_sid": None,  # 実際は使わない
                 "others_info": self.get_others_info(current_player, self.active_players),
                 "sum": sum_of_others,
+                "round_num": self.round_num,
                 "log": self.logs["round_info"][-1]["turn_info"],  # これまでのturnログ
                 "legal_action": legal_actions
             }
