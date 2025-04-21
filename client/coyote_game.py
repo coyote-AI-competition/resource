@@ -1,6 +1,5 @@
 import pyspiel
 import numpy as np
-import coyote
 from open_spiel.python.algorithms import external_sampling_mccfr
 from open_spiel.python.algorithms import get_all_states
 from open_spiel.python.algorithms import deep_cfr
@@ -12,6 +11,7 @@ import os
 import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
+from pyspiel import PlayerId
 
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()  # TF1互換モードに切り替え
@@ -39,17 +39,54 @@ _GAME_TYPE = pyspiel.GameType(
     provides_factored_observation_string=False
 )
 
-
 _GAME_INFO = pyspiel.GameInfo(
     num_distinct_actions=2,  # 宣言 + チャレンジ
-    max_chance_outcomes=0,
+    max_chance_outcomes=15,  # 山札のカードの種類数
     num_players=_NUM_PLAYERS,
     min_utility=-1.0,
-    max_utility=1.0,
+    max_utility=5.0,
     utility_sum=0.0,
     max_game_length=100,
 )
 
+class Deck:
+    def __init__(self):
+        #初期条件
+        #?→ max→0→×2:103,102,101,100に対応
+        self.cards = [-10, -5, -5, 0, 0, 0,
+                      1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3,
+                      4, 4, 4, 4, 5, 5, 5, 5, 
+                      10, 10, 10, 15, 15, 20, 
+                      100, 101, 102, 103]
+        
+        self.cashed_cards = [] #山札に戻すカードを格納するリスト
+    
+    def shuffle(self):
+        # print ("Deck shuffled.")
+        random.shuffle(self.cards)
+    
+    def draw(self):
+        if len(self.cards) > 0:
+            return random.choice(self.cards) #ランダムにカードを引く
+        else:
+            # print("No card left in the deck.")
+            random.shuffle(self.cashed_cards) #山札に戻すカードをシャッフルする
+            #山札が空になったら、捨て札を山札に追加する
+            self.reset()
+            return random.choice(self.cards) #ランダムにカードを引く
+    
+    def top_show_card(self):
+        if len(self.cards) > 0:
+            return self.cards[-1]
+        return None
+    
+    def reset(self):
+        self.cards = [-10, -5, -5, 0, 0, 0,
+                      1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3,
+                      4, 4, 4, 4, 5, 5, 5, 5, 
+                      10, 10, 10, 15, 15, 20, 
+                      100, 101, 102, 103]
+        self.shuffle()             
 
 class CoyoteState(pyspiel.State):
     def __init__(self, game):
@@ -59,13 +96,16 @@ class CoyoteState(pyspiel.State):
         self._player_lives = [1] * _NUM_PLAYERS
         self._player_active = [True] * _NUM_PLAYERS
         self.current_declaration = 0
-        self.last_declarer = None
+        self.last_declarer = _NUM_PLAYERS - 1
+        self._calc_continue = False
+        self.question_index = None
         rnd = random.Random(time.time_ns())
-        self.deck = coyote.game.Deck() # 使用デッキ
+        self.deck = Deck() # 使用デッキ
         self.deck.shuffle() # デッキをシャッフル
-        self._cards = [self.deck.draw() for _ in range(_NUM_PLAYERS)]  # 各プレイヤーに1枚ずつカードを配る
+        self._cards = [None] * _NUM_PLAYERS  # プレイヤーの手札
         self.is_double_card = False
         self.is_shuffle_card = False
+        self._expecting_draw = True  # チャンスノードに移行するかどうか
         self._used_cards = []  # 使用済みカード
         self._all_cards = [-10, -5, -5, 0, 0, 0,
                       1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3,
@@ -74,12 +114,75 @@ class CoyoteState(pyspiel.State):
                       100, 101, 102, 103]
         # print("Game started!")
 
+    def current_player(self):
+        if self._is_terminal:
+            return PlayerId.TERMINAL
+        if self._expecting_draw:
+            return PlayerId.CHANCE   # ← チャンスノードに移行
+        return self._cur_player       # ← プレイヤーノード
+                    
+    def convert_card(self, cards, Is_othersum, deck):
+            # print (f"cards: {cards}")
+            true_cards = sorted(cards, reverse = True) 
+            index = 0 
+            # print(f"Initial true_cards: {true_cards}")
+            while index < len(true_cards):
+                card = true_cards[index]
+                # print(f"Card drawn: {card}")
+
+                #?を引いたら次のカードを引き、出た番号のカードと交換する
+                #全体の数の計算はラウンドにつき一回
+
+                #maxを引いたら、最も大きいカードを0にする      
+                if(card == 102):
+                    normal_cards = [c for c in true_cards if c < 100] #通常カードを取得
+                    if len(normal_cards) != 0:
+                        max_card = max(c for c in true_cards if c < 100) #最大値を取得
+                        max_index = true_cards.index(max_card) #最大値のインデックスを取得
+                        true_cards[max_index] = 0 #最大値を0にする
+                    true_cards[true_cards.index(102)] = 0    
+                    
+                #0(黒背景)を引いたら、ラウンド終了後山札をリセットする        
+                elif(card == 101):
+                    true_cards[index] = 0
+                    #true_cards = sorted(( card for card in true_cards),reverse=True)
+                    self.is_shuffle_card = True
+                elif(card == 100):
+                    true_cards[index] = 0
+                    #true_cards = sorted(( card for card in true_cards),reverse=True)
+                    self.is_double_card = True
+                
+                index += 1      
+        
+            return self.calc_card_sum(true_cards)   #関数の外に合計値を返す               
+
+    def set_initial_state(self, player_num, current_declaration, used_cards, other_cards):
+        self._player_lives = [0] * _NUM_PLAYERS
+        self._player_active = [False] * _NUM_PLAYERS
+        for i in range(player_num):
+            self._player_lives[i] = 1
+            self._player_active[i] = True
+        self.current_declaration = current_declaration
+        self.last_declarer = player_num - 1
+        self._used_cards = used_cards
+        print(other_cards)
+        for i in range(_NUM_PLAYERS):
+            if i == 0:
+                self._cards[i] = "error"
+            elif i < player_num:
+                self._cards[i] = other_cards[i-1]
+            else:
+                self._cards[i] = 0
 
     def calc_card_sum(self, cards):
-        return coyote.game.calc_card_sum(self, cards)
-
-    def current_player(self):
-        return pyspiel.PlayerId.TERMINAL if self._is_terminal else self._cur_player
+        card_sum = 0 #初期化
+        for card in cards:
+            card_sum += card
+        if(self.is_double_card):
+            card_sum *= 2 
+            self.is_double_card = False
+        # print(f"gamesum is {card_sum}")    
+        return card_sum    
 
     def _legal_actions(self, player):
         # if not self._player_active[player]:
@@ -91,17 +194,65 @@ class CoyoteState(pyspiel.State):
         actions = [0, 1] # 0: 宣言, 1: チャレンジ
         return actions
     
+    def chance_outcomes(self):
+        # 山札に残ったカードのカウント
+        counts = {}
+        for card in self.deck.cards:
+            counts[card] = counts.get(card, 0) + 1
+        total = len(self.deck.cards)
+        return [(card, cnt/total) for card, cnt in counts.items()]
+
     def _apply_action(self, action):
-        if (action == 1 or self.current_declaration >= _NUM_DECLARATIONS - 1) and self.last_declarer is not None:  # チャレンジ
+        # Chanceノードに移行する場合
+        if self.current_player() == PlayerId.CHANCE:
+            # question カードを引いた場合
+            if self._calc_continue:
+                drawn_card = action  # action がカード値
+                self._cards[self.question_index] = drawn_card
+                self.deck.cards.remove(drawn_card)
+                self._used_cards.append(drawn_card)
+                self._calc_continue = False
+                self._expecting_draw = False
+                if self.deck.cards == []:
+                    self.deck.reset()
+                    self._used_cards = []
+                return
+            # ドロー処理
+            drawn_card = action  # action がカード値
+            self._cards[self._cur_player] = drawn_card
+            self.deck.cards.remove(drawn_card)  # 山札からカードを削除
+            if self.deck.cards == []:
+                self.deck.reset()
+                self._used_cards = []
+            self._cur_player = (self._cur_player + 1) % _NUM_PLAYERS
+            while not self._player_active[self._cur_player]:
+                self._cards[self._cur_player] = 0
+                self._cur_player = (self._cur_player + 1) % _NUM_PLAYERS
+            # フラグクリア＆通常プレイヤーに戻す
+            if not None in self._cards:
+                self._expecting_draw = False
+            else:
+                self._expecting_draw = True
+            return
+
+        if (action == 1 or self.current_declaration >= _NUM_DECLARATIONS - 1) or self._calc_continue:  # チャレンジ
             # print(f"Current Cards: {self._cards}")
             # print(f"Player {self._cur_player} challenges with declaration {self.current_declaration}.")
-            true_total = coyote.game.convert_card(self, self._cards, False, self.deck)
+            if 103 in self._cards:
+                question_index = self._cards.index(103)
+                self._cards[question_index] = None
+                self.question_index = question_index
+                self._calc_continue = True
+                self._expecting_draw = True
+                return
+
+            true_total = self.convert_card(self._cards, False, self.deck)
 
             # used_cardsにカードを追加
             for i in range(_NUM_PLAYERS):
-                if self._player_active[i]:
-                    # プレイヤーがアクティブな場合はカードを追加
-                    if self._cards[i] in self._all_cards:
+                if self._player_active[i] and i != self._cur_player:
+                    # プレイヤーがアクティブな場合はカードを追加自分のカードは見えない
+                    if self._cards[i] in self._all_cards and i != self.question_index:
                         self._used_cards.append(self._cards[i])
 
             if self.current_declaration > true_total:
@@ -119,19 +270,10 @@ class CoyoteState(pyspiel.State):
                 self.deck.reset()
                 self._used_cards = []
                 self.is_shuffle_card = False
-            for i in range(_NUM_PLAYERS):
-                if self._player_active[i]:
-                    if len(self.deck.cards) == 0:
-                        self.deck.reset()
-                        self._used_cards = []
-                    # プレイヤーがアクティブな場合はカードを引く
-                    card = self.deck.draw()
-                    self._cards[i] = card
-                else:
-                    # プレイヤーがアクティブでない場合はカードを0にする
-                    self._cards[i] = 0
+            self._cards = [None] * _NUM_PLAYERS  # プレイヤーの手札をNoneにする
+            self._expecting_draw = True
+            self.question_index = None
             # used_cardsにカードを追加
-            # print(f"New cards: {self._cards}")
             # print(f"Used cards: {self._used_cards}")
             # print(f"Player {loser} loses a life!")
             # print(f"Player lives: {self._player_lives}")
@@ -139,11 +281,14 @@ class CoyoteState(pyspiel.State):
             # print(f"Player {self._cur_player} declares {self.current_declaration+1}.")
             self.current_declaration = self.current_declaration + 1
             self.last_declarer = self._cur_player
+
         self._cur_player = (self._cur_player + 1) % _NUM_PLAYERS
         while not self._player_active[self._cur_player]:
             self._cur_player = (self._cur_player + 1) % _NUM_PLAYERS
 
     def is_terminal(self):
+        # if self._is_terminal:
+        #     print(f"Game over! Player {self._cur_player} wins!")
         return self._is_terminal
 
     def returns(self):
@@ -181,8 +326,8 @@ class CoyoteState(pyspiel.State):
         if player is None:
             player = self._cur_player
         # プレイヤーの情報状態をテンソルに変換
-        # 宣言値 1 + プレイヤーのライフ _NUM_PLAYERS + プレイヤーの手札 (_NUM_PLAYERS - 1) * 4 + remaining_cards 15
-        tensor = np.zeros(1 + _NUM_PLAYERS + (_NUM_PLAYERS - 1)*4 + 15, dtype=np.float32)
+        # 宣言値 1 + プレイヤーのライフ _NUM_PLAYERS + プレイヤーの手札 (_NUM_PLAYERS - 1) * 4 + remaining_cards 15 + current_estimate + the difference between the current estimate and the current declaration
+        tensor = np.zeros(1 + _NUM_PLAYERS + (_NUM_PLAYERS - 1)*4 + 15 + 1 + 1, dtype=np.float32)
 
         # 現在の宣言値を入れる
         tensor[0] = self.current_declaration
@@ -234,12 +379,40 @@ class CoyoteState(pyspiel.State):
         # 残りのカードを入れる
         for i in range(15):
             tensor[1 + _NUM_PLAYERS + (_NUM_PLAYERS - 1)*4 + i] = np.sum([1 for card in visible_cards if card == cards_kind[i]])
-        return tensor
 
+        # 現在の相手のカードの合計値を入れる
+        current_estimate = 0
+        max_card = -100
+        max_flag = False
+        double_flag = False
+        for i in range(_NUM_PLAYERS):
+            if self._cards[i] is None:
+                continue
+            elif self._player_active[i] and i != player and self._cards[i] < 100:
+                current_estimate += self._cards[i]
+                if self._cards[i] > max_card:
+                    max_card = self._cards[i]
+            elif self._player_active[i] and i != player and self._cards[i] == 100:
+                current_estimate += 0
+                double_flag = True
+            elif self._player_active[i] and i != player and self._cards[i] == 102:
+                current_estimate += 0
+                max_flag = True
+        
+        if max_flag:
+            current_estimate -= max_card
+
+        if double_flag:
+            current_estimate *= 2
+
+        tensor[1 + _NUM_PLAYERS + (_NUM_PLAYERS - 1)*4 + 15] = current_estimate
+        # 現在の宣言値との差を入れる
+        tensor[1 + _NUM_PLAYERS + (_NUM_PLAYERS - 1)*4 + 16] = current_estimate - self.current_declaration
+
+        return tensor
 
     def __str__(self):
         return f"Cards: {self._cards}\nCurrent declaration: {self.current_declaration}\nLives: {self._player_lives}\nActive players: {self._player_active}"
-
 
 class CoyoteObserver:
     def __init__(self, params):
@@ -289,11 +462,11 @@ if __name__ == "__main__":
         solver = deep_cfr.DeepCFRSolver(
             game=game,
             session=sess,
-            policy_network_layers=[64, 32, 16, 8],
-            advantage_network_layers=[64, 32, 16, 8],
+            policy_network_layers=[256, 256],
+            advantage_network_layers=[256, 256],
             num_iterations=1,
-            num_traversals=5,
-            learning_rate=0.01,
+            num_traversals=10,
+            learning_rate=1e-3,
             batch_size_advantage=32,
             batch_size_strategy=32,
             memory_capacity=10000
