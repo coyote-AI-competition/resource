@@ -27,8 +27,8 @@ class CFRClient(Client):
         self.solver = deep_cfr.DeepCFRSolver(
             game=self.game,
             session=self.session,
-            policy_network_layers=[16, 16],
-            advantage_network_layers=[16, 16],
+            policy_network_layers=[64, 64],
+            advantage_network_layers=[64, 64],
             num_iterations=1,
             num_traversals=10,
             learning_rate=1e-4,
@@ -147,7 +147,7 @@ class StatClient(Client):
 
         if 101 in self.all_card:
             self.all_card.remove(101)
-            self.append(0)
+            self.all_card.append(0)
 
         others_card = [info["card_info"] for info in others_info]
         
@@ -162,11 +162,6 @@ class StatClient(Client):
             others_card.remove(103)
         if 101 in others_card:
             others_card.remove(101)
-
-        
-
-
-        
 
 
         return random.choice(actions)

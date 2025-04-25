@@ -44,7 +44,7 @@ _GAME_INFO = pyspiel.GameInfo(
     max_chance_outcomes=15,  # 山札のカードの種類数
     num_players=_NUM_PLAYERS,
     min_utility=-1.0,
-    max_utility=5.0,
+    max_utility=1.0,
     utility_sum=0.0,
     max_game_length=100,
 )
@@ -173,6 +173,7 @@ class CoyoteState(pyspiel.State):
                 self._cards[i] = other_cards[i-1]
             else:
                 self._cards[i] = 0
+        self._expecting_draw = False  # チャンスノードに移行するかどうか
 
     def calc_card_sum(self, cards):
         card_sum = 0 #初期化
@@ -294,7 +295,8 @@ class CoyoteState(pyspiel.State):
     def returns(self):
         survive = sum(self._player_active)
         points = _NUM_PLAYERS - survive
-        return [points/survive if self._player_active[i] else -1 for i in range(_NUM_PLAYERS)]
+        reward_ls = np.array([points/survive if self._player_active[i] else -1 for i in range(_NUM_PLAYERS)])
+        return reward_ls / max(reward_ls)  # 正規化
     
     def information_state_string(self, player=None):
         if player is None:
@@ -388,14 +390,14 @@ class CoyoteState(pyspiel.State):
         for i in range(_NUM_PLAYERS):
             if self._cards[i] is None:
                 continue
-            elif self._player_active[i] and i != player and self._cards[i] < 100:
+            elif (self._player_active[i]) and (i != player) and (self._cards[i] < 100):
                 current_estimate += self._cards[i]
                 if self._cards[i] > max_card:
                     max_card = self._cards[i]
-            elif self._player_active[i] and i != player and self._cards[i] == 100:
+            elif self._player_active[i] and (i != player) and (self._cards[i] == 100):
                 current_estimate += 0
                 double_flag = True
-            elif self._player_active[i] and i != player and self._cards[i] == 102:
+            elif self._player_active[i] and (i != player) and (self._cards[i] == 102):
                 current_estimate += 0
                 max_flag = True
         
@@ -462,14 +464,14 @@ if __name__ == "__main__":
         solver = deep_cfr.DeepCFRSolver(
             game=game,
             session=sess,
-            policy_network_layers=[256, 256],
-            advantage_network_layers=[256, 256],
-            num_iterations=1,
-            num_traversals=10,
-            learning_rate=1e-3,
-            batch_size_advantage=32,
-            batch_size_strategy=32,
-            memory_capacity=10000
+            policy_network_layers=[64, 64],
+            advantage_network_layers=[64, 64],
+            num_iterations=5,
+            num_traversals=100,
+            learning_rate=1e-4,
+            batch_size_advantage=128,
+            batch_size_strategy=128,
+            memory_capacity=1e6
         )
 
         # 変数初期化
