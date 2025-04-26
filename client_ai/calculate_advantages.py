@@ -1,5 +1,5 @@
 from collections import defaultdict
-from encode_state import encode_state
+from .encode_state import encode_state
 import numpy as np 
 def calculate_advantages(game_states, advantage_net):
     """

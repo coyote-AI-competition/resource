@@ -5,9 +5,11 @@ from client_ai.StrategyNetwork import StrategyNetwork
 import random
 
 class SampleClient(Client):
-    def __init__(self):
+    def __init__(self, player_name, is_ai=True):
         super().__init__()
         # strategy_netsを初期化
+        self.player_name = player_name
+        self.is_ai = is_ai
         self.strategy_net = StrategyNetwork(303, 141)  # 必要な引数を指定
     def AI_player_action(self,others_info, sum, log, player_card, actions, round_num):
         # カスタムロジックを実装

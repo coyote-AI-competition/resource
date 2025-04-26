@@ -1,4 +1,5 @@
-def update_strategy_network(strategy_net, advantage_net):
+import numpy as np
+def update_strategy_network(strategy_net, advantage_net, reservoir_buffer, batch_size=32, epochs=10):
     """
     Update strategy network based on advantage network
     

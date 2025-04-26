@@ -223,7 +223,7 @@ class Arena:
             print(f"get_others_info: {self.get_others_info(current_player, self.active_players)}")
             # otherカード合計
             other_cards = [p.hold_card for p in self.active_players if p != current_player]
-            player_card = self.active_players[current_player].hold_card
+            player_card = current_player.hold_card
             
             # sum_of_others = self.sum_of_others_cards(other_cards)
             sum_of_others = self.convert_card(other_cards, True)

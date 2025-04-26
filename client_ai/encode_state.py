@@ -17,6 +17,7 @@ def encode_state(state):
     others_info = state["others_info"]
     sum_val = state["sum"]
     log_info = state["log"]
+    round_num = state["round_num"]
     legal_action = state["legal_action"]
     
     # 1. 他プレイヤー情報のエンコード
@@ -60,7 +61,7 @@ def encode_state(state):
     
     # 3. ゲームログの処理
     # ラウンド数の正規化
-    round_normalized = log_info["round_count"] / 10  # 想定最大ラウンド数で正規化
+    round_normalized = round_num / 10  # 想定最大ラウンド数で正規化
     
     # ターン情報のエンコード（最新の10ターン分）
     max_turns = 10

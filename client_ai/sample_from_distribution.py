@@ -1,3 +1,4 @@
+import random
 def sample_from_distribution(probs, legal_actions):
     """
     確率分布から行動をサンプリングする

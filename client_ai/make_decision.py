@@ -1,3 +1,5 @@
+from .encode_state import encode_state
+from .sample_from_distribution import sample_from_distribution
 def make_decision(state, strategy_net):
     """
     現在の状態から最適な宣言値を決定

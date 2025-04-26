@@ -22,6 +22,7 @@ def train_deepcfr_for_coyote(iterations=1000,current_state=None):
     strategy_net = StrategyNetwork(303, 141)
 
     # Create reservoir buffers for each player
+    advantage_buffer = ReservoirBuffer()
     strategy_buffer = ReservoirBuffer()
     try:
       # ゲームデータをロード
