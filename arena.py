@@ -1,3 +1,4 @@
+#用意されてたのがSampleClient, 追加されるのがnot_websocket_client.Client
 from server.arena import Arena
 if __name__ == "__main__":
     # -- Example usage --
@@ -5,7 +6,7 @@ if __name__ == "__main__":
     # もし事前に定義したクライアントを渡したい場合:
     #
     from client.sample_arena_client import SampleClient as SampleClient
-    
+    print (f"SampleClient: {SampleClient}")
     predefs = [
         [SampleClient(player_name="PreAI1", is_ai=True), "PreAI1"],
         [SampleClient(player_name="PreAI2", is_ai=True), "PreAI2"]

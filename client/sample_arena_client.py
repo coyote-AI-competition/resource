@@ -7,5 +7,5 @@ class SampleClient(Client):
         print(f"[SampleClient] AI deciding action based on sum: {sum}, log: {log}, actions: {actions},others_info: {others_info}, round_num: {round_num}" )
         # 例: ランダムにアクションを選択
         action = random.choice(actions)
-        print(f"[SampleClient] AI selected action: {action}")
+        print(f"ランダムダヨーン: {action}")
         return action
