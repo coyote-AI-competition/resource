@@ -35,6 +35,7 @@ class Arena:
         self.death_order = []  # 死亡順
         self.progress_bar = None
         self.use_tqdm = True  # tqdmを使うかどうか
+        self.turn_index = 0
         
         self.is_shuffle_card = False
         self.is_double_card = False
@@ -212,11 +213,10 @@ class Arena:
 
         # 全員が一巡するまで turn_start() を回す例
         # (コヨーテが発生してround_endになる場合もある)
-        turn_index = 0
         last_call = 0
         turn_count = 0
         while (len(self.active_players) > 1):
-            current_player = self.active_players[turn_index]
+            current_player = self.active_players[self.turn_index]
 
             print(f"get_others_info: {self.get_others_info(current_player, self.active_players)}")
             # otherカード合計
@@ -254,7 +254,7 @@ class Arena:
             else:
                 # last_callを更新し、次のプレイヤーへ
                 last_call = action
-                turn_index = (turn_index + 1) % len(self.active_players)
+                self.turn_index = (self.turn_index + 1) % len(self.active_players)
                 
             turn_count += 1
             
@@ -334,18 +334,23 @@ class Arena:
             # コヨーテ成功 => 前プレイヤーがライフ-1
             self._log(f"{coyote_player.player_name} called COYOTE successfully! total_sum is {total_sum},last_call is {last_call},{prev_player.player_name} loses 1 life.")
             prev_player.life -= 1
+            self.turn_index = prev_idx
             if prev_player.life <= 0:
                 self._log(f"{prev_player.player_name} is dead!")
                 self.active_players.remove(prev_player)
                 self.death_order.append(prev_player.player_name)
+                self.turn_index = c_idx
+
         else:
             # コヨーテ失敗 => コールした本人がライフ-1
             self._log(f"{coyote_player.player_name} called COYOTE but failed! total_sum is {total_sum},last_call is {last_call},They lose 1 life.")
             coyote_player.life -= 1
+            self.turn_index = c_idx
             if coyote_player.life <= 0:
                 self._log(f"{coyote_player.player_name} is dead!")
                 self.active_players.remove(coyote_player)
                 self.death_order.append(coyote_player.player_name)
+                self.turn_index = prev_idx
 
     def show_final_result(self):
         """
