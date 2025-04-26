@@ -1,4 +1,5 @@
-def update_advantage_network(advantage_net, game_states):
+import numpy as np
+def update_advantage_network(advantage_net, advantage, buffer, batch_size=32, epochs=10):
     """
     Update the advantage network for a player
     
@@ -11,12 +12,11 @@ def update_advantage_network(advantage_net, game_states):
         epochs: Number of training epochs
     """
     # Extract training data for this player
-    for info_set, advantage_data in advantages.items():
-        if info_set.startswith(f"player{player}_"):
-            for action, advantage_value, encoded_state in advantage_data:
-                # Add to reservoir buffer
-                buffer.add((encoded_state, action, advantage_value))
-    
+    for info_set, advantage_data in advantage.items():
+        for action, advantage_value, encoded_state in advantage_data:
+            # Add to reservoir buffer
+            buffer.add((encoded_state, action, advantage_value))
+
     # Sample from buffer and prepare training data
     if len(buffer.buffer) < batch_size:
         return  # Not enough data for training

@@ -35,6 +35,7 @@ class Arena:
         self.death_order = []  # 死亡順
         self.progress_bar = None
         self.use_tqdm = True  # tqdmを使うかどうか
+        self.total_sum = 0
         
         self.is_shuffle_card = False
         self.is_double_card = False
@@ -194,8 +195,9 @@ class Arena:
             if card is None:
                 card = self.deck.reset()
                 card = self.deck.draw()
-            p.hold_card = card 
+            p.hold_card = card
 
+        self.total_sum = self.convert_card((p.hold_card for p in self.active_players),False)
         # ラウンドログを作る
         self.logs["round_info"].append({
             "round_count": self.round_num,
@@ -221,6 +223,7 @@ class Arena:
             print(f"get_others_info: {self.get_others_info(current_player, self.active_players)}")
             # otherカード合計
             other_cards = [p.hold_card for p in self.active_players if p != current_player]
+            player_card = self.active_players[current_player].hold_card
             
             # sum_of_others = self.sum_of_others_cards(other_cards)
             sum_of_others = self.convert_card(other_cards, True)
@@ -231,7 +234,8 @@ class Arena:
                 "header": "turn",
                 "player_sid": None,  # 実際は使わない
                 "others_info": self.get_others_info(current_player, self.active_players),
-                "sum": sum_of_others,
+                "sum": self.total_sum,
+                "player_card": player_card,
                 "round_num": self.round_num,
                 "log": self.logs["round_info"][-1]["turn_info"],  # これまでのturnログ
                 "legal_action": legal_actions
@@ -316,9 +320,9 @@ class Arena:
         - コヨーテ成功or失敗判定
         - 該当プレイヤーのライフを減らし、死んだら activeから除外
         """
-        total_sum = self.convert_card((p.hold_card for p in self.active_players),False)
+        #total_sum = self.convert_card((p.hold_card for p in self.active_players),False)
         # コヨーテ成功判定 
-        is_coyote_success = (last_call > total_sum)
+        is_coyote_success = (last_call > self.total_sum)
 
         # 前のプレイヤーを探す
         c_idx = self.active_players.index(coyote_player)
@@ -332,7 +336,7 @@ class Arena:
             
         if is_coyote_success:
             # コヨーテ成功 => 前プレイヤーがライフ-1
-            self._log(f"{coyote_player.player_name} called COYOTE successfully! total_sum is {total_sum},last_call is {last_call},{prev_player.player_name} loses 1 life.")
+            self._log(f"{coyote_player.player_name} called COYOTE successfully!  is {self.total_sum},last_call is {last_call},{prev_player.player_name} loses 1 life.")
             prev_player.life -= 1
             if prev_player.life <= 0:
                 self._log(f"{prev_player.player_name} is dead!")
@@ -340,7 +344,7 @@ class Arena:
                 self.death_order.append(prev_player.player_name)
         else:
             # コヨーテ失敗 => コールした本人がライフ-1
-            self._log(f"{coyote_player.player_name} called COYOTE but failed! total_sum is {total_sum},last_call is {last_call},They lose 1 life.")
+            self._log(f"{coyote_player.player_name} called COYOTE but failed! total_sum is {self.total_sum},last_call is {last_call},They lose 1 life.")
             coyote_player.life -= 1
             if coyote_player.life <= 0:
                 self._log(f"{coyote_player.player_name} is dead!")

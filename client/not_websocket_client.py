@@ -90,6 +90,7 @@ class Client:
         # tqdm.write(f"Log: {log_info}")　// ログは長いのでコメントアウト
         legal_actions = turn_data["legal_action"]
         round_num = turn_data["round_num"]
+        player_card = turn_data["player_card"]
         # tqdm.write(f"Possible actions: {legal_actions}")
 
         min_range = legal_actions[1]
@@ -103,7 +104,7 @@ class Client:
 
         #プレイヤーに引数を渡す
         if self.is_ai: #AIの場合
-            action = self.AI_player_action(others_info,sum,log_info, actions, round_num)
+            action = self.AI_player_action(others_info,sum, log_info, player_card, actions, round_num)
             if action not in actions: #アクションが不正な場合
                 return -1
             tqdm.write(f"{self.player_name} selected action: {action}")
@@ -178,7 +179,7 @@ class Client:
         return self.calc_card_sum(true_cards)   #関数の外に合計値を返す
     
     
-    def ai_turn(self, others_info, sum, action,round_num):
+    def ai_turn(self, others_info, sum, log, player_card, action,round_num):
 
         # AIの行動を決定するロジックを実装する
         # 全員の手札を配列に格納する
@@ -253,8 +254,8 @@ class Client:
 
     # playerに引数を渡し、actionという返り値を受け取る
     # ここではactionを仮に1000としてlegal_actionの範囲外の値を返す
-    def AI_player_action(self,others_info,sum,log, actions,round_num):
-        action = self.ai_turn(others_info, sum, actions, round_num)
+    def AI_player_action(self,others_info,sum,log, player_card, actions,round_num):
+        action = self.ai_turn(others_info, sum, log,  player_card, actions, round_num)
         return action
     
     #人間が行動する場合

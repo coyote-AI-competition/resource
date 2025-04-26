@@ -1,5 +1,6 @@
 from collections import defaultdict
-
+from encode_state import encode_state
+import numpy as np 
 def calculate_advantages(game_states, advantage_net):
     """
     それぞれのプレイヤーの反実仮想アドバンテージを計算する
@@ -20,15 +21,21 @@ def calculate_advantages(game_states, advantage_net):
     trajectory_value = 0  # Final game value
     
     for state_info in reversed(game_states):
-        state = state_info["state"]
+        state = {
+            "others_info": state_info["others_info"],
+            "legal_action": state_info["legal_action"],
+            "log": state_info["log"],
+            "sum": state_info["sum"],
+            "round_num": state_info["round_num"],
+            "player_card": state_info["player_card"]
+        }
         action_taken = state_info["action"]
-        player = state_info["player"]
         
         # Encode state for network input
-        encoded_state = es.encode_state(state)
+        encoded_state = encode_state(state)
         
         # Get current strategy's action values
-        action_values = advantage_net[player](np.expand_dims(encoded_state, axis=0)).numpy()[0]
+        action_values = advantage_net(np.expand_dims(encoded_state, axis=0)).numpy()[0]
         
         # Calculate advantages (counterfactual regret)
         # In a real implementation, you would calculate the actual counterfactual values
@@ -47,7 +54,7 @@ def calculate_advantages(game_states, advantage_net):
                 advantage = -action_values[action]
             
             # Store advantage for this information set and action
-            info_set_key = f"player{player}_state{hash(str(encoded_state.tobytes()))}"
+            info_set_key = f"player_state{hash(str(encoded_state.tobytes()))}"
             advantages[info_set_key].append((action, advantage, encoded_state))
     
     return advantages

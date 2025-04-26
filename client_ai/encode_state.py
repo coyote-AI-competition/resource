@@ -1,5 +1,5 @@
 
-
+import numpy as np
 def encode_state(state):
     """
     ゲーム状態をdeepCFRのニューラルネットワーク入力形式に変換

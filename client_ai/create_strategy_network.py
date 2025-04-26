@@ -1,3 +1,4 @@
+from StrategyNetwork import StrategyNetwork 
 def create_strategy_network():
     """戦略ネットワークを作成"""
     # 入力サイズはゲーム状態に合わせて調整
