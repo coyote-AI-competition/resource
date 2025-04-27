@@ -6,6 +6,7 @@ import json
 import os
 import random
 from tqdm import tqdm  
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from client.not_websocket_client import Client as LocalClient

@@ -10,7 +10,7 @@ class SampleClient(Client):
         # strategy_netsを初期化
         self.player_name = player_name
         self.is_ai = is_ai
-        self.strategy_net = StrategyNetwork(303, 141)  # 必要な引数を指定
+        self.strategy_net = StrategyNetwork(304, 141)  # 必要な引数を指定
     def AI_player_action(self,others_info, sum, log, player_card, actions, round_num):
         # カスタムロジックを実装
         print(f"[SampleClient] AI deciding action based on sum: {sum}, log: {log}, actions: {actions},others_info: {others_info}, round_num: {round_num}" )
@@ -27,7 +27,18 @@ class SampleClient(Client):
         }
 
         select_action = make_decision(state, self.strategy_net)
-        self.strategy_net = train_deepcfr_for_coyote(iterations=1000, current_state = state)
+
+        state = {
+            "others_info": others_info,
+            "legal_action": actions,
+            "log": log,  # 既存のlog情報を使用
+            "sum": sum,
+            "round_num": round_num,
+            "player_card": player_card,
+            "selectaction": select_action,
+            "reword": reword 
+        }
+        self.strategy_net = train_deepcfr_for_coyote(current_state = state)
 
         RED = '\033[31m'
         END = '\033[0m'

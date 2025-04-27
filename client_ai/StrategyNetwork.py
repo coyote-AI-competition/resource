@@ -1,3 +1,5 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 import numpy as np
 
@@ -27,7 +29,7 @@ class StrategyNetwork:
         
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), #交差エントロピー損失関数
+            loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True), #交差エントロピー損失関数
             metrics=['accuracy'] #正解率
         )
         return model

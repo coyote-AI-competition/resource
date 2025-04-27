@@ -5,7 +5,7 @@ from .encode_state import encode_state
 from .calculate_advantages import calculate_advantages
 from .update_strategy_network import update_strategy_network
 from .update_advantage_network import update_advantage_network
-def train_deepcfr_for_coyote(iterations=1000,current_state=None):
+def train_deepcfr_for_coyote(iterations=10,current_state=None):
     """
     Train Deep CFR for Coyote game
 
@@ -18,8 +18,8 @@ def train_deepcfr_for_coyote(iterations=1000,current_state=None):
     """
     num_players = 6
     # Create networks for each player
-    advantage_net = create_advantage_network
-    strategy_net = StrategyNetwork(303, 141)
+    advantage_net = create_advantage_network()
+    strategy_net = StrategyNetwork(304, 141)
 
     # Create reservoir buffers for each player
     advantage_buffer = ReservoirBuffer()
@@ -62,7 +62,7 @@ def train_deepcfr_for_coyote(iterations=1000,current_state=None):
 
         # Periodically update strategy networks
         if i % 10 == 0:
-            strategy_net.model.save(f"/content/drive/MyDrive/models/model_{player}.keras")
+            strategy_net.model.save(f"models/model.keras")
 
             update_strategy_network(
                 strategy_net,
@@ -72,7 +72,7 @@ def train_deepcfr_for_coyote(iterations=1000,current_state=None):
 
             # Save models
             for player in range(num_players):
-                strategy_net.model.save(f"/content/drive/MyDrive/models/model_{player}.keras")
+                strategy_net.model.save(f"models/model.keras")
 
     return strategy_net
 

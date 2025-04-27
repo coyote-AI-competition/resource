@@ -1,4 +1,8 @@
 #用意されてたのがSampleClient, 追加されるのがnot_websocket_client.Client
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # 0: 全て表示, 1: INFO非表示, 2: WARNING非表示, 3: ERROR非表示
 from server.arena import Arena
 if __name__ == "__main__":
     # -- Example usage --

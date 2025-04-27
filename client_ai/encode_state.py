@@ -19,6 +19,7 @@ def encode_state(state):
     log_info = state["log"]
     round_num = state["round_num"]
     legal_action = state["legal_action"]
+    player_card = state["player_card"]
     
     # 1. 他プレイヤー情報のエンコード
     player_features = []
@@ -48,6 +49,13 @@ def encode_state(state):
         # このプレイヤーの特徴をまとめる
         player_features.extend(card_encoding + position_encoding + [life_normalized])
     
+    # 自分の持つカードをエンコード
+    player_card_values = [-10, -5, 0, 1, 2, 3, 4, 5, 10, 15, 20, 100, 101, 102, 103]
+    player_card_encoding = [0] * len(player_card_values)
+    player_card_idx = player_card_values.index(player_card)
+    player_card_encoding[player_card_idx] = 1
+    player_features.extend(player_card_encoding)
+
     # プレイヤー数が変わる可能性があるため、常に5人分の情報を確保（6人対戦で自分を除く）
     # 足りない場合は0パディング
     max_players = 5
@@ -97,6 +105,6 @@ def encode_state(state):
             action_mask[action] = 1
     
     # すべての特徴を連結
-    features = player_features + [sum_normalized, round_normalized] + turn_features + action_mask
+    features = player_features + [sum_normalized + round_normalized] + turn_features + action_mask
     
     return np.array(features, dtype=np.float32)

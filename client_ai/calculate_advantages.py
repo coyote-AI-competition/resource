@@ -16,9 +16,71 @@ def calculate_advantages(game_states, advantage_net):
     """
     #キーがない場合そのキーを作成する
     advantages = defaultdict(list)
-    
+     
+    #報酬を定義する
+    def define_reword(state_info):
+        if "reward" in state_info:
+            return state_info["reward"]
+        
+        reward = 0.0
+
+        # Check if this is a terminal state
+        if "is_terminal" in state_info and state_info["is_terminal"]:
+            # If player won (has more life than others)
+            if "player_life" in state_info and "others_life" in state_info:
+                player_life = state_info["player_life"]
+                others_life = state_info["others_life"]
+                if player_life > max(others_life):
+                    reward = 1.0  # Win
+                elif player_life == 0:
+                    reward = -1.0  # Loss
+            # Alternative: if player is last one with life remaining
+            elif "others_info" in state_info:
+                others_life = [other["life"] for other in state_info["others_info"]]
+                player_life = state_info.get("player_life", 0)
+                if player_life > 0 and all(life <= 0 for life in others_life):
+                    reward = 1.0
+                elif player_life <= 0:
+                    reward = -1.0
+
+        # Intermediate rewards based on card value and sum
+        # Higher card value is generally better in most card games
+        if "player_card" in state_info:
+            card_value = state_info["player_card"]
+            # Special handling for special cards (100+)
+            if isinstance(card_value, int) and card_value >= 100:
+                # Special cards might be valuable
+                card_bonus = 0.05
+            elif isinstance(card_value, int):
+                # Regular cards: normalize between -0.05 and 0.05
+                card_range = 30  # Assuming cards range from -10 to 20
+                card_bonus = (card_value + 10) / card_range * 0.1 - 0.05
+            else:
+                card_bonus = 0
+            reward += card_bonus  
+
+        # Reward for making good declarations relative to the actual sum
+        if "sum" in state_info and "selectaction" in state_info:
+            game_sum = state_info["sum"]
+            declared_value = state_info["selectaction"]
+            
+            # Penalize declarations that are too high (over the actual sum)
+            if declared_value > game_sum:
+                # Penalty increases as the declaration gets further from reality
+                reward -= min(0.2, (declared_value - game_sum) / 100)
+            else:
+                # Small reward for close but under declarations
+                closeness = 1 - (game_sum - declared_value) / game_sum if game_sum > 0 else 0
+                reward += closeness * 0.1
+        
+        return reward              
+     
     # Process game trajectory in reverse to calculate counterfactual values
     trajectory_value = 0  # Final game value
+
+    # 最後の状態が終了状態なら、その報酬を取得
+    if game_states:
+        trajectory_value = game_states[-1]["reward"]
     
     for state_info in reversed(game_states):
         state = {
@@ -29,7 +91,7 @@ def calculate_advantages(game_states, advantage_net):
             "round_num": state_info["round_num"],
             "player_card": state_info["player_card"]
         }
-        action_taken = state_info["action"]
+        action_taken = state_info["selectaction"]
         
         # Encode state for network input
         encoded_state = encode_state(state)
@@ -38,8 +100,6 @@ def calculate_advantages(game_states, advantage_net):
         action_values = advantage_net(np.expand_dims(encoded_state, axis=0)).numpy()[0]
         
         # Calculate advantages (counterfactual regret)
-        # In a real implementation, you would calculate the actual counterfactual values
-        # by considering alternative actions' outcomes
         legal_actions = state["legal_action"]
         
         # For each legal action, estimate its advantage
@@ -56,5 +116,14 @@ def calculate_advantages(game_states, advantage_net):
             # Store advantage for this information set and action
             info_set_key = f"player_state{hash(str(encoded_state.tobytes()))}"
             advantages[info_set_key].append((action, advantage, encoded_state))
-    
+                # 重要: 前の状態の価値を更新
+        # 例えば、割引率を導入してもよい
+        discount_factor = 0.95  # 時間割引率
+        if "immediate_reward" in state_info:
+            # 即時報酬がある場合はそれを加える
+            trajectory_value = state_info["immediate_reward"] + discount_factor * trajectory_value
+        else:
+            # 即時報酬がない場合は単に割引くだけ
+            trajectory_value = discount_factor * trajectory_value
+
     return advantages
