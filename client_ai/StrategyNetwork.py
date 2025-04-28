@@ -1,7 +1,4 @@
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
-import numpy as np
 
 class StrategyNetwork:
     def __init__(self, input_size, output_size=141):  # 0〜140までの141通りの宣言値

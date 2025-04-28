@@ -1,7 +1,4 @@
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
-
 def create_advantage_network():
     """アドバンテージネットワークを作成"""
     # 入力サイズはゲーム状態に合わせて調整

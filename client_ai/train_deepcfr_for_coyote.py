@@ -49,10 +49,10 @@ def train_deepcfr_for_coyote(iterations=10,current_state=None):
         print(f"Iteration {i+1}/{iterations}")
 
         # Simulate games using current strategy
-        game_states = [current_state] #simulate_coyote_game(strategy_nets, num_players)
+        game_state = [current_state] #simulate_coyote_game(strategy_nets, num_players)
 
         # Calculate advantages 
-        advantages = calculate_advantages(game_states, advantage_net)
+        advantages = calculate_advantages(game_state, advantage_net, strategy_net)
 
         update_advantage_network(
             advantage_net,
