@@ -8,10 +8,10 @@ import json
 from tqdm import tqdm
 
 # 既存のコードからインポート
-from encode_state import encode_state
-from StrategyNetwork import StrategyNetwork
-from reservoirbuffer import ReservoirBuffer
-from create_advantage_network import create_advantage_network
+from .encode_state import encode_state
+from .StrategyNetwork import StrategyNetwork
+from .reservoirbuffer import ReservoirBuffer
+from .create_advantage_network import create_advantage_network
 
 # 学習評価のためのクラス
 class CFRTrainingEvaluator:
@@ -195,10 +195,10 @@ class CFRTrainingEvaluator:
         return fig, overestimation_rate
 
 # メイン実行関数
-def evaluate_cfr_training(iterations=50,current_state=[]):
+def evaluate_cfr_training(current_state,iterations=50):
     """CFR学習の評価を実行"""
     # ネットワークの作成
-    input_size = 304
+    input_size = 302
     output_size = 141
     advantage_net = create_advantage_network()
     strategy_net = StrategyNetwork(input_size, output_size)
