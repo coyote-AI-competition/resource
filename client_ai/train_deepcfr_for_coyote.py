@@ -5,7 +5,7 @@ from .encode_state import encode_state
 from .calculate_advantages import calculate_advantages
 from .update_strategy_network import update_strategy_network
 from .update_advantage_network import update_advantage_network
-def train_deepcfr_for_coyote(iterations=10,current_state=None):
+def train_deepcfr_for_coyote(self,iterations=10,current_state=None):
     """
     Train Deep CFR for Coyote game
 
@@ -19,7 +19,7 @@ def train_deepcfr_for_coyote(iterations=10,current_state=None):
     num_players = 6
     # Create networks for each player
     advantage_net = create_advantage_network()
-    strategy_net = StrategyNetwork(304, 141)
+    strategy_net = StrategyNetwork(302, 141)
 
     # Create reservoir buffers for each player
     advantage_buffer = ReservoirBuffer()
@@ -52,7 +52,7 @@ def train_deepcfr_for_coyote(iterations=10,current_state=None):
         game_state = [current_state] #simulate_coyote_game(strategy_nets, num_players)
 
         # Calculate advantages 
-        advantages = calculate_advantages(game_state, advantage_net, strategy_net)
+        advantages = calculate_advantages(self, game_state, advantage_net)
 
         update_advantage_network(
             advantage_net,

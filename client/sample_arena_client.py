@@ -2,6 +2,7 @@ from .not_websocket_client import Client
 from client_ai.train_deepcfr_for_coyote import train_deepcfr_for_coyote
 from client_ai.make_decision import make_decision
 from client_ai.StrategyNetwork import StrategyNetwork
+from client_ai.CFRTrainingEvaluator import evaluate_cfr_training
 import random
 
 class SampleClient(Client):
@@ -10,7 +11,7 @@ class SampleClient(Client):
         # strategy_netsを初期化
         self.player_name = player_name
         self.is_ai = is_ai
-        self.strategy_net = StrategyNetwork(304, 141)  # 必要な引数を指定
+        self.strategy_net = StrategyNetwork(302, 141)  # 必要な引数を指定
         self.previous_round_num = 0
         self.Is_coyoted = None
         self.trajectory_value = 0
@@ -58,7 +59,10 @@ class SampleClient(Client):
             "player_card": player_card,
             "selectaction": select_action,
         }
-        self.strategy_net = train_deepcfr_for_coyote(current_state = state)
+        evaluator = evaluate_cfr_training(iterations=50)
+        prediction_fig = visualize_model_prediction(evaluator.strategy_net, test_states)
+        prediction_fig.savefig('model_predictions.png')
+        self.strategy_net = train_deepcfr_for_coyote(self, current_state = state)
 
         RED = '\033[31m'
         END = '\033[0m'

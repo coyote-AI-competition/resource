@@ -2,7 +2,7 @@ import tensorflow as tf
 def create_advantage_network():
     """アドバンテージネットワークを作成"""
     # 入力サイズはゲーム状態に合わせて調整
-    input_size = 304  # 適切なサイズに調整
+    input_size = 302  # 適切なサイズに調整
     output_size = 141  # 0〜140の宣言値
     
     model = tf.keras.Sequential([
