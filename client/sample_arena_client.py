@@ -91,6 +91,7 @@ class SampleClient(Client):
             "round_num": round_num,
             "player_card": player_card,
             "selectaction": select_action,
+            "Is_coyoted": self.Is_coyoted,
         }
         self.game_state.append(state.copy())
         evaluator = evaluate_cfr_training(self.game_state)

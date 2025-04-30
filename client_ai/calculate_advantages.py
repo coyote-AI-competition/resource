@@ -1,6 +1,7 @@
 from collections import defaultdict
 from .encode_state import encode_state
 import numpy as np 
+import tensorflow as tf
 def calculate_advantages(self, game_states, advantage_net):
     """
     それぞれのプレイヤーの反実仮想アドバンテージを計算する
@@ -18,23 +19,18 @@ def calculate_advantages(self, game_states, advantage_net):
     advantages = defaultdict(list)
      
     #報酬を定義する
-    def define_reward(state_info):
-        if "reward" in state_info:
-            return state_info["reward"]
-        
+    def define_reward(state_info):      
         reward = 0.0
 
-        # Check if this is a terminal state
-        if "is_terminal" in state_info and state_info["is_terminal"]:
-            # If player won (has more life than others)
-            if state_info["Is_coyoted"] == True:
-                self.Is_coyoted = None
-                reward = -2.0 
-            elif state_info["Is_coyoted"] == False:
-                self.Is_coyoted = None  
-                reward = 1.0  # Win
-            else:
-                reward = 0.0             
+        # If player won (has more life than others)
+        if state_info["Is_coyoted"] == True:
+            self.Is_coyoted = None
+            reward -= 2.0  # Lose
+        elif state_info["Is_coyoted"] == False:
+            self.Is_coyoted = None  
+            reward += 1.0  # Win
+        else:
+            reward += 0.0             
 
         # Intermediate rewards based on card value and sum
         # Higher card value is generally better in most card games
@@ -61,6 +57,9 @@ def calculate_advantages(self, game_states, advantage_net):
             if declared_value > game_sum:
                 # Penalty increases as the declaration gets further from reality
                 reward -= min(0.2, (declared_value - game_sum) / 100)
+            elif declared_value > game_sum * 1.2:
+                # Large penalty for over-declarations
+                reward -= 0.7   
             else:
                 # Small reward for close but under declarations
                 closeness = 1 - (game_sum - declared_value) / game_sum if game_sum > 0 else 0
@@ -72,7 +71,10 @@ def calculate_advantages(self, game_states, advantage_net):
 
     # 最後の状態が終了状態なら、その報酬を取得
     if game_states:
-        self.trajectory_value += define_reward(game_states)
+        self.trajectory_value += define_reward(game_states[-1])
+    
+    def predict_action_values(advantage_net, encoded_state):
+        return advantage_net(encoded_state, training=False)
     
     for state_info in reversed(game_states):
         state = {
@@ -89,7 +91,8 @@ def calculate_advantages(self, game_states, advantage_net):
         encoded_state = encode_state(state)
         
         # Get current strategy's action values
-        action_values = advantage_net(np.expand_dims(encoded_state, axis=0)).numpy()[0]
+        encoded_state = tf.convert_to_tensor(np.expand_dims(encoded_state, axis=0), dtype=tf.float32)
+        action_values = predict_action_values(advantage_net, encoded_state).numpy()[0]
         
         # Calculate advantages (counterfactual regret)
         legal_actions = state["legal_action"]
@@ -106,7 +109,7 @@ def calculate_advantages(self, game_states, advantage_net):
                 advantage = -action_values[action]
             
             # Store advantage for this information set and action
-            info_set_key = f"player_state{hash(str(encoded_state.tobytes()))}"
+            info_set_key = f"player_state{hash(str(encoded_state.numpy().tobytes()))}"
             advantages[info_set_key].append((action, advantage, encoded_state))
 
     return advantages
