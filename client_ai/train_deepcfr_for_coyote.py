@@ -17,9 +17,6 @@ def train_deepcfr_for_coyote(self,iterations=10,current_state=None):
         list: Trained strategy networks for each player
     """
     num_players = 6
-    # Create networks for each player
-    advantage_net = create_advantage_network()
-    strategy_net = StrategyNetwork(302, 141)
 
     # Create reservoir buffers for each player
     advantage_buffer = ReservoirBuffer()
@@ -48,31 +45,25 @@ def train_deepcfr_for_coyote(self,iterations=10,current_state=None):
     for i in range(iterations):
         print(f"Iteration {i+1}/{iterations}")
 
-        # Simulate games using current strategy
         game_state = [current_state] #simulate_coyote_game(strategy_nets, num_players)
 
-        # Calculate advantages 
-        advantages = calculate_advantages(self, game_state, advantage_net)
+        #advantages[info_set_key].append((action, advantage, encoded_state)) 
+        advantages = calculate_advantages(self, game_state, self.advantage_net)
 
         update_advantage_network(
-            advantage_net,
+            self.advantage_net,
             advantages,
             advantage_buffer
         )
 
         # Periodically update strategy networks
         if i % 10 == 0:
-            strategy_net.model.save(f"models/model.keras")
 
             update_strategy_network(
-                strategy_net,
-                advantage_net,
+                self.strategy_net,
+                self.advantage_net,
                 advantage_buffer
             )
 
-            # Save models
-            for player in range(num_players):
-                strategy_net.model.save(f"models/model.keras")
-
-    return strategy_net
+    return self.strategy_net
 

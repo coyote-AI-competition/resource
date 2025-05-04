@@ -18,11 +18,15 @@ class StrategyNetwork:
         """ニューラルネットワークモデルを構築"""
         model = tf.keras.Sequential([
             tf.keras.layers.Input(shape=(self.input_size,)),
-            tf.keras.layers.Dense(256, activation='relu'),
+            tf.keras.layers.Dense(256),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Activation('relu'),
             tf.keras.layers.Dropout(0.2),
-            tf.keras.layers.Dense(256, activation='relu'),
+            tf.keras.layers.Dense(256),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Activation('relu'),
             tf.keras.layers.Dropout(0.2),
-            tf.keras.layers.Dense(self.output_size)  # 出力層はロジット（未正規化の確率）
+            tf.keras.layers.Dense(self.output_size)  # 出力層はロジット
         ])
         
         model.compile(
@@ -43,19 +47,24 @@ class StrategyNetwork:
         Returns:
             dict: 行動をキー、選択確率を値とする辞書
         """
-        # バッチ次元を追加
-        state_batch = np.expand_dims(state, axis=0)#stateを配列の中に内包する[0]→[[0]]
-                                                   #単一の状態でバッチとして扱うために、次元を追加
+        # テンソルに変換
+        if isinstance(state, np.ndarray):
+            state = tf.convert_to_tensor(state, dtype=tf.float32)
+        
+        # 形状を(None, 318)に調整
+        if len(state.shape) == 1:
+            state = tf.expand_dims(state, axis=0)  # (1, 318)の形状に
+        elif len(state.shape) == 3:
+            state = tf.reshape(state, (-1, 318))  # (1, 1, 318) → (1, 318)
         
         # ニューラルネットワークで予測
-        logits = self.model(state_batch, training=False).numpy()[0] # 結果を取得
+        logits = self.model(state, training=False).numpy()[0] # 結果を取得
         
         # 可能な行動のみに制限
         if legal_actions is not None:
             mask = np.ones_like(logits) * -1e9 #配列と同じ形状の配列を作成し、そのすべての要素を -1e9に設定
             for action in legal_actions:
-                if 0 <= action < len(mask):
-                    mask[action] = 0
+                mask[action+1] = 0 # 1を足すのは、-1から始まるインデックスを考慮するため
             logits = logits + mask # 許可されていない行動のスコアは -1e9 に近い極端に小さい値に設定
         
         # ソフトマックスで確率分布に変換
@@ -70,3 +79,11 @@ class StrategyNetwork:
                     action_probs[i] = float(probabilities[i])
         
         return action_probs
+    '''
+    例
+    action_probs = {
+    0: 0.1,  # 行動0の確率
+    1: 0.3,  # 行動1の確率
+    2: 0.6   # 行動2の確率
+    }
+    '''

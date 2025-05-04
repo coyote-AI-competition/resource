@@ -11,22 +11,26 @@ def update_advantage_network(advantage_net, advantage, buffer, batch_size=32, ep
         batch_size: Training batch size
         epochs: Number of training epochs
     """
-    # Extract training data for this player
     for info_set, advantage_data in advantage.items():
         for action, advantage_value, encoded_state in advantage_data:
-            # Add to reservoir buffer
+          
             buffer.add((encoded_state, action, advantage_value))
 
-    # Sample from buffer and prepare training data
+
     if len(buffer.buffer) < batch_size:
-        return  # Not enough data for training
+        return  
     
+    #len(samples)はターン数に相当する
     samples = buffer.sample(batch_size)
     states = np.array([s[0] for s in samples])
     actions = np.array([s[1] for s in samples])
     advantages = np.array([s[2] for s in samples])
     
-    # Create target values (one-hot with advantages)
+    # 状態テンソルの形状を(None, 318)に調整
+    if len(states.shape) == 3:
+        states = states.reshape(-1, 318)  # (32, 1, 318) → (32, 318)
+    
+    #len(samples)×141の行列を作成し0に初期化
     targets = np.zeros((len(samples), advantage_net.output_shape[1]))
     for i, (action, advantage) in enumerate(zip(actions, advantages)):
         targets[i, action] = advantage
