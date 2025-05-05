@@ -186,7 +186,7 @@ def encode_state(state: Union[Dict[str, Any], str]) -> np.ndarray:
         player_features.extend([0] * padding_size)
     
     # 2. 合計値の正規化
-    theoretical_max_sum = 140  # 適切な値に調整（ゲーム状況による）
+    theoretical_max_sum = 139  # 適切な値に調整（ゲーム状況による）
     sum_normalized = sum_val / theoretical_max_sum
     
     # 3. ゲームログの処理

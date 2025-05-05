@@ -82,7 +82,7 @@ def calculate_advantages(self, game_states, advantage_net):
         if len(encoded_state.shape) == 1:
             encoded_state = tf.expand_dims(encoded_state, axis=0)  # (1, 318)の形状に
         elif len(encoded_state.shape) == 3:
-            encoded_state = tf.reshape(encoded_state, (-1, 318))  # (1, 1, 318) → (1, 318)
+            encoded_state = tf.reshape(encoded_state, (-1, self.input_size))  # (1, 1, 318) → (1, 318)
         
         output = advantage_net(encoded_state, training=False)
         print(f"Model output: {output.numpy()}")
@@ -109,11 +109,11 @@ def calculate_advantages(self, game_states, advantage_net):
         if len(encoded_state.shape) == 1:
             encoded_state = tf.expand_dims(encoded_state, axis=0)  # (1, 318)の形状に
         elif len(encoded_state.shape) == 3:
-            encoded_state = tf.reshape(encoded_state, (-1, 318))  # (32, 1, 318) → (32, 318)
+            encoded_state = tf.reshape(encoded_state, (-1, self.input_size))  # (32, 1, 318) → (32, 318)
         
         # バッチ処理時の形状を調整
         if len(encoded_state.shape) == 2 and encoded_state.shape[0] > 1:
-            encoded_state = tf.reshape(encoded_state, (-1, 318))  # (32, 318)の形状を維持
+            encoded_state = tf.reshape(encoded_state, (-1, self.input_size))  # (32, 318)の形状を維持
         
         action_values = predict_action_value(advantage_net, encoded_state).numpy()[0]
         print(f"Action values: {action_values}") #ここの値を評価する

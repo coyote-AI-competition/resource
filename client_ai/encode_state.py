@@ -68,7 +68,7 @@ def encode_state(state):
         player_features.extend([0] * padding_size)
     
     # 2. 合計値の正規化
-    theoretical_max_sum = 140  # 適切な値に調整（ゲーム状況による）
+    theoretical_max_sum = 139  # 適切な値に調整（ゲーム状況による）
     sum_normalized = sum_val / theoretical_max_sum
     
     # 3. ゲームログの処理
@@ -98,7 +98,7 @@ def encode_state(state):
             player_one_hot[player_id] = 1
         
         # 宣言値の正規化
-        declared_value = turn["declared_value"] / 140  # 想定最大宣言値
+        declared_value = turn["declared_value"] / 139  # 想定最大宣言値
         
         turn_features.extend(player_one_hot + [declared_value])
     
@@ -108,7 +108,7 @@ def encode_state(state):
         turn_features.extend([0] * padding_size)
     
     # 4. 可能なアクション（legal_action）のマスク
-    max_action_value = 140  # 想定される最大宣言値
+    max_action_value = 139  # 想定される最大宣言値
     action_mask = [0] * (max_action_value + 1)
     
     for action in legal_action:

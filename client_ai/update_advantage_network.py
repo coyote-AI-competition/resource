@@ -1,5 +1,5 @@
 import numpy as np
-def update_advantage_network(advantage_net, advantage, buffer, batch_size=32, epochs=10):
+def update_advantage_network(self,advantage_net, advantage, buffer, batch_size=32, epochs=10):
     """
     Update the advantage network for a player
     
@@ -28,7 +28,7 @@ def update_advantage_network(advantage_net, advantage, buffer, batch_size=32, ep
     
     # 状態テンソルの形状を(None, 318)に調整
     if len(states.shape) == 3:
-        states = states.reshape(-1, 318)  # (32, 1, 318) → (32, 318)
+        states = states.reshape(-1, self.input_size)  # (32, 1, 318) → (32, 318)
     
     #len(samples)×141の行列を作成し0に初期化
     targets = np.zeros((len(samples), advantage_net.output_shape[1]))

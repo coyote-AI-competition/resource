@@ -1,5 +1,5 @@
 import numpy as np
-def update_strategy_network(strategy_net, advantage_net, reservoir_buffer, batch_size=32, epochs=10):
+def update_strategy_network(self,strategy_net, advantage_net, reservoir_buffer, batch_size=32, epochs=10):
     """
     Update strategy network based on advantage network
     
@@ -19,7 +19,7 @@ def update_strategy_network(strategy_net, advantage_net, reservoir_buffer, batch
     
     # 状態テンソルの形状を(None, 318)に調整
     if len(states.shape) == 3:
-        states = states.reshape(-1, 318)  # (32, 1, 318) → (32, 318)
+        states = states.reshape(-1, self.input_size)  # (32, 1, 318) → (32, 318)
     
     # Get advantage values
     advantage_values = advantage_net.predict(states)

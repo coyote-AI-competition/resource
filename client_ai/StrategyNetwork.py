@@ -2,13 +2,13 @@ import tensorflow as tf
 import numpy as np
 
 class StrategyNetwork:
-    def __init__(self, input_size, output_size=141):  # 0〜140までの141通りの宣言値
+    def __init__(self, input_size, output_size=141):  # 入力サイズを318に固定
         """
         deepCFRの戦略ネットワークを初期化
         
         Args:
-            input_size: 入力特徴の次元数
-            output_size: 出力（行動）の次元数
+            input_size: 入力特徴の次元数（デフォルト: 317）
+            output_size: 出力（行動）の次元数（デフォルト: 141）
         """
         self.input_size = input_size
         self.output_size = output_size
@@ -17,7 +17,7 @@ class StrategyNetwork:
     def _build_model(self):
         """ニューラルネットワークモデルを構築"""
         model = tf.keras.Sequential([
-            tf.keras.layers.Input(shape=(self.input_size,)),
+            tf.keras.layers.Input(shape=(self.input_size)),
             tf.keras.layers.Dense(256),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.Activation('relu'),
@@ -41,7 +41,7 @@ class StrategyNetwork:
         戦略ネットワークを使用して、各行動の確率分布を予測する
         
         Args:
-            state: エンコードされたゲーム状態（np.array）
+            state: エンコードされたゲーム状態np.array
             legal_actions: 可能な行動のリスト（指定がない場合はすべての行動から選択）
         
         Returns:
@@ -51,30 +51,38 @@ class StrategyNetwork:
         if isinstance(state, np.ndarray):
             state = tf.convert_to_tensor(state, dtype=tf.float32)
         
-        # 形状を(None, 318)に調整
+        # 形状を(None, input_size)に調整
         if len(state.shape) == 1:
-            state = tf.expand_dims(state, axis=0)  # (1, 318)の形状に
+            state = tf.expand_dims(state, axis=0)  # (1, input_size)の形状に
         elif len(state.shape) == 3:
-            state = tf.reshape(state, (-1, 318))  # (1, 1, 318) → (1, 318)
+            state = tf.reshape(state, (-1, self.input_size))  # (1, 1, input_size) → (1, input_size)
+        
+        # 入力サイズの確認と調整
+        if state.shape[-1] != self.input_size:
+            # 不足している次元を0で埋める
+            padding = tf.zeros((state.shape[0], self.input_size - state.shape[-1]))
+            state = tf.concat([state, padding], axis=1)
         
         # ニューラルネットワークで予測
         logits = self.model(state, training=False).numpy()[0] # 結果を取得
         
         # 可能な行動のみに制限
+        #-1から140まで
         if legal_actions is not None:
-            mask = np.ones_like(logits) * -1e9 #配列と同じ形状の配列を作成し、そのすべての要素を -1e9に設定
+            mask = np.ones_like(logits) * -1e9
             for action in legal_actions:
                 mask[action+1] = 0 # 1を足すのは、-1から始まるインデックスを考慮するため
             logits = logits + mask # 許可されていない行動のスコアは -1e9 に近い極端に小さい値に設定
         
         # ソフトマックスで確率分布に変換
-        # 選択肢の確率が同じになる？
         probabilities = np.exp(logits) / np.sum(np.exp(logits))
         
         # 結果を辞書形式で返す
+        #-1から140までaction
+        #0〜141までindex
         action_probs = {}
-        for i in range(len(probabilities)):
-            if legal_actions is None or i in legal_actions:
+        for i in range(len(probabilities)):  # インデックスを-1から140の範囲に変換
+            if legal_actions is None or action in legal_actions:
                 if probabilities[i] > 0:
                     action_probs[i] = float(probabilities[i])
         

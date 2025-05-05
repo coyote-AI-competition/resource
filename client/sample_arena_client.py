@@ -19,11 +19,12 @@ class SampleClient(Client):
         # strategy_netsを初期化
         self.player_name = player_name
         self.is_ai = is_ai
+        self.input_size = 317
         # Create directories if they don't exist
         Path("models").mkdir(exist_ok=True) #モデルというフォルダが存在するか
         Path("save_picture").mkdir(exist_ok=True) # sava_pictureというフォルダが存在するか
-        self.strategy_net = StrategyNetwork(318, 141)  # 必要な引数を指定
-        self.advantage_net = create_advantage_network() #アドバンテージネットワークの作成
+        self.strategy_net = StrategyNetwork(self, self.input_size)  # 必要な引数を指定
+        self.advantage_net = create_advantage_network(self) #アドバンテージネットワークの作成
 
         self._load_model()# モデルの読み込み
         self.previous_round_num = 0# 直前のラウンド番号
@@ -118,7 +119,7 @@ class SampleClient(Client):
             "Is_coyoted": self.Is_coyoted,
         }
         self.game_state.append(state.copy())
-        evaluator = evaluate_cfr_training(self.game_state)
+        evaluator = evaluate_cfr_training(self, self.game_state)
         prediction_fig = visualize_model_prediction(evaluator.strategy_net, self.game_state)
        
         current_time = datetime.now().strftime("%Y%m%d_%H%M%S")

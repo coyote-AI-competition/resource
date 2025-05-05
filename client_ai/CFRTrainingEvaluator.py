@@ -195,12 +195,12 @@ class CFRTrainingEvaluator:
         return fig, overestimation_rate
 
 # メイン実行関数
-def evaluate_cfr_training(current_state,iterations=50):
+def evaluate_cfr_training(self,current_state,iterations=50):
     """CFR学習の評価を実行"""
     # ネットワークの作成
-    input_size = 318
+    input_size = self.input_size
     output_size = 141
-    advantage_net = create_advantage_network()
+    advantage_net = create_advantage_network(self)
     strategy_net = StrategyNetwork(input_size, output_size)
     
     # 評価用のインスタンス
@@ -226,7 +226,7 @@ def evaluate_cfr_training(current_state,iterations=50):
         
         # 形状を(None, 318)に調整
         if len(encoded_states.shape) == 3:
-            encoded_states = encoded_states.reshape(-1, 318)  # (32, 1, 318) → (32, 318)
+            encoded_states = encoded_states.reshape(-1, self.input_size)  # (32, 1, 318) → (32, 318)
         
         # アドバンテージネットワークの更新シミュレーション
         advantage_loss = advantage_net.fit(
