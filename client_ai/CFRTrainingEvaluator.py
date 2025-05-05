@@ -201,7 +201,7 @@ def evaluate_cfr_training(self,current_state,iterations=50):
     input_size = self.input_size
     output_size = 141
     advantage_net = create_advantage_network(self)
-    strategy_net = StrategyNetwork(input_size, output_size)
+    strategy_net = StrategyNetwork(self.total_sum, input_size, output_size)
     
     # 評価用のインスタンス
     evaluator = CFRTrainingEvaluator(strategy_net, advantage_net)

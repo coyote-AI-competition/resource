@@ -51,6 +51,7 @@ def train_deepcfr_for_coyote(self,iterations=10,current_state=None):
         advantages = calculate_advantages(self, game_state, self.advantage_net)
 
         update_advantage_network(
+            self,
             self.advantage_net,
             advantages,
             advantage_buffer
@@ -60,6 +61,7 @@ def train_deepcfr_for_coyote(self,iterations=10,current_state=None):
         if i % 10 == 0:
 
             update_strategy_network(
+                self,
                 self.strategy_net,
                 self.advantage_net,
                 advantage_buffer

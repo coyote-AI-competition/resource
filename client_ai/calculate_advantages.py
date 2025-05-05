@@ -25,10 +25,11 @@ def calculate_advantages(self, game_states, advantage_net):
         # If player won (has more life than others)
         if state_info["Is_coyoted"] == True:
             self.Is_coyoted = None
-            reward -= 2.0  # Lose
+            reward -= 1.0  # Lose
+            print("コヨーテされた")
         elif state_info["Is_coyoted"] == False:
             self.Is_coyoted = None  
-            reward += 1.0  # Win
+            reward += 0.1  # Win
         else:
             reward += 0.0             
 
@@ -55,15 +56,18 @@ def calculate_advantages(self, game_states, advantage_net):
             
             # Penalize declarations that are too high (over the actual sum)
             if declared_value > game_sum:
-                # Penalty increases as the declaration gets further from reality
-                reward -= min(0.2, (declared_value - game_sum) / 100)
-            elif declared_value > game_sum * 1.2:
-                # Large penalty for over-declarations
-                reward -= 0.7   
+                
+                if declared_value > game_sum * 1.2:
+                    # Large penalty for over-declarations
+                    reward -= 1   
+                    print("宣言値が実際の合計の120%を超えた")
+                else:
+                    reward -= max(0.5, (declared_value - game_sum) / 100)   
+                    print("宣言値が実際の合計の120%を超えなかった")
             else:
                 # Small reward for close but under declarations
                 closeness = 1 - (game_sum - declared_value) / game_sum if game_sum > 0 else 0
-                reward += closeness * 0.1
+                reward += closeness * 0.5
         
         return reward              
      
@@ -72,6 +76,7 @@ def calculate_advantages(self, game_states, advantage_net):
     # 最後の状態が終了状態なら、その報酬を取得
     if game_states:
         self.trajectory_value = define_reward(game_states[-1])
+        print(f"trajectory_value: {self.trajectory_value}")
     
     def predict_action_value(advantage_net, encoded_state):
         # テンソルに変換

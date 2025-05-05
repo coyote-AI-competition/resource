@@ -20,10 +20,11 @@ class SampleClient(Client):
         self.player_name = player_name
         self.is_ai = is_ai
         self.input_size = 317
+        self.total_sum = 0
         # Create directories if they don't exist
         Path("models").mkdir(exist_ok=True) #モデルというフォルダが存在するか
         Path("save_picture").mkdir(exist_ok=True) # sava_pictureというフォルダが存在するか
-        self.strategy_net = StrategyNetwork(self, self.input_size)  # 必要な引数を指定
+        self.strategy_net = StrategyNetwork(self.total_sum,self.input_size)  # 必要な引数を指定
         self.advantage_net = create_advantage_network(self) #アドバンテージネットワークの作成
 
         self._load_model()# モデルの読み込み
@@ -38,19 +39,19 @@ class SampleClient(Client):
         self.train_frequency = 10  
         self.training_in_progress = False
         self.game_state = []
+       
 
     def _load_model(self):
   
-        strategy_model_path = "models/strategy_model.keras"
+        strategy_model_path = "models/strategy_model_317.keras"
         if os.path.exists(strategy_model_path):
             try:
                 self.strategy_net.model = tf.keras.models.load_model(strategy_model_path)
                 print(f"Loaded existing model from {strategy_model_path}")
             except Exception as e:
-                print(f"Error loading model: {e}")
-                
+                print(f"Error loading model: {e}")                
         # アドバンテージネットワークのモデルを読み込む
-        advantage_model_path = "models/advantage_model.keras"
+        advantage_model_path = "models/advantage_model_317.keras"
         if os.path.exists(advantage_model_path):
             try:
                 self.advantage_net = tf.keras.models.load_model(advantage_model_path)
@@ -62,12 +63,12 @@ class SampleClient(Client):
  
         try:
             # 戦略ネットワークの保存
-            strategy_model_path = "models/strategy_model.keras"
+            strategy_model_path = "models/strategy_model_317.keras"
             self.strategy_net.model.save(strategy_model_path)
             print(f"Saved strategy model to {strategy_model_path}")
             
             # アドバンテージネットワークの保存
-            advantage_model_path = "models/advantage_model.keras"
+            advantage_model_path = "models/advantage_model_317.keras"
             self.advantage_net.save(advantage_model_path)
             print(f"Saved advantage model to {advantage_model_path}")
         except Exception as e:
@@ -92,8 +93,9 @@ class SampleClient(Client):
             else:
                 print("コヨーテされていない")
                 self.Is_coyoted = False
-                self.prev_others_life = others_life    
+                self.prev_others_life = others_life   
 
+        self.total_sum = sum
         state = {
             "others_info": others_info,
             "legal_action": actions,

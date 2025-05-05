@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 class StrategyNetwork:
-    def __init__(self, input_size, output_size=141):  # 入力サイズを318に固定
+    def __init__(self, total_sum, input_size, output_size=141):  # 入力サイズを318に固定
         """
         deepCFRの戦略ネットワークを初期化
         
@@ -12,12 +12,13 @@ class StrategyNetwork:
         """
         self.input_size = input_size
         self.output_size = output_size
+        self.total_sum = total_sum
         self.model = self._build_model()
         
     def _build_model(self):
         """ニューラルネットワークモデルを構築"""
         model = tf.keras.Sequential([
-            tf.keras.layers.Input(shape=(self.input_size)),
+            tf.keras.layers.Input(shape=(self.input_size,)),
             tf.keras.layers.Dense(256),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.Activation('relu'),
@@ -65,6 +66,19 @@ class StrategyNetwork:
         
         # ニューラルネットワークで予測
         logits = self.model(state, training=False).numpy()[0] # 結果を取得
+            # コヨーテの選択確率を調整
+        if legal_actions is not None and -1 in legal_actions:
+            # 前のプレイヤーの宣言値と場の合計を考慮
+            previous_declaration = legal_actions[1] - 1  # 前のプレイヤーの宣言値
+            current_sum = self.total_sum  # 場の合計
+            
+            if previous_declaration > current_sum:
+                # 前のプレイヤーの宣言が実際の合計より大きい場合
+                # コヨーテの確率を上げる
+                logits[0] += 2.0  # コヨーテのインデックスは0
+                            # 他の行動の確率を下げる
+                for i in range(1, len(logits)):
+                    logits[i] -= 0.5
         
         # 可能な行動のみに制限
         #-1から140まで
@@ -76,15 +90,25 @@ class StrategyNetwork:
         
         # ソフトマックスで確率分布に変換
         probabilities = np.exp(logits) / np.sum(np.exp(logits))
+
+        for action in range(len(probabilities)):
+            if action > self.total_sum * 0.8:  # 宣言値が既知の合計の80%を超える場合
+                probabilities[action] *= 0.7  # 確率を減らす
+        
+        # 確率の正規化（小さい確率を0に）
+        threshold = 1e-5  # 閾値
+        probabilities[probabilities < threshold] = 0
+        probabilities = probabilities / np.sum(probabilities)  # 再正規化
+        
         
         # 結果を辞書形式で返す
         #-1から140までaction
         #0〜141までindex
         action_probs = {}
         for i in range(len(probabilities)):  # インデックスを-1から140の範囲に変換
-            if legal_actions is None or action in legal_actions:
-                if probabilities[i] > 0:
-                    action_probs[i] = float(probabilities[i])
+  
+            if probabilities[i] > 0:
+                action_probs[i] = float(probabilities[i])
         
         return action_probs
     '''
