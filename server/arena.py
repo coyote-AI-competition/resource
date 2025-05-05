@@ -37,6 +37,7 @@ class Arena:
         self.progress_bar = None
         self.use_tqdm = True  # tqdmを使うかどうか
         self.total_sum = 0
+        self.turn_index = 0
         
         self.is_shuffle_card = False
         self.is_double_card = False
@@ -193,9 +194,9 @@ class Arena:
         # カードを引く
         for p in self.active_players:
             card = self.deck.draw()
-            if card is None:
-                card = self.deck.reset()
-                card = self.deck.draw()
+            if self.deck.cards == []:
+                self._log("Deck is empty. Resetting the deck.")
+                self.deck.reset()
             p.hold_card = card
 
         self.total_sum = self.convert_card((p.hold_card for p in self.active_players),False)
@@ -219,7 +220,7 @@ class Arena:
         last_call = 0
         turn_count = 0
         while (len(self.active_players) > 1):
-            current_player = self.active_players[turn_index]
+            current_player = self.active_players[self.turn_index % len(self.active_players)]
 
             print(f"get_others_info: {self.get_others_info(current_player, self.active_players)}")
             # otherカード合計
@@ -259,7 +260,7 @@ class Arena:
             else:
                 # last_callを更新し、次のプレイヤーへ
                 last_call = action
-                turn_index = (turn_index + 1) % len(self.active_players)
+                self.turn_index = (self.turn_index + 1) % len(self.active_players)
                 
             turn_count += 1
             
@@ -343,6 +344,7 @@ class Arena:
                 self._log(f"{prev_player.player_name} is dead!")
                 self.active_players.remove(prev_player)
                 self.death_order.append(prev_player.player_name)
+                self.turn_index = c_idx
         else:
             # コヨーテ失敗 => コールした本人がライフ-1
             self._log(f"{coyote_player.player_name} called COYOTE but failed! total_sum is {self.total_sum},last_call is {last_call},They lose 1 life.")
