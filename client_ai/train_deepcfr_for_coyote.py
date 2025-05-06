@@ -5,6 +5,8 @@ from .encode_state import encode_state
 from .calculate_advantages import calculate_advantages
 from .update_strategy_network import update_strategy_network
 from .update_advantage_network import update_advantage_network
+import numpy as np
+import logging
 def train_deepcfr_for_coyote(self,iterations=10,current_state=None):
     """
     Train Deep CFR for Coyote game
@@ -32,8 +34,8 @@ def train_deepcfr_for_coyote(self,iterations=10,current_state=None):
 
       # 状態をエンコード
       encoded_state = encode_state(current_state)
-      print(f"Encoded state shape: {encoded_state.shape}")
-      print(f"First 10 values: {encoded_state[:10]}")
+      logging.info(f"Encoded state shape: {encoded_state.shape}")
+      logging.info(f"First 10 values: {encoded_state[:10]}")
 
       # すべてのラウンドをバッチエンコード
     #   encoded_batch = encode_batch_states(game_data)
@@ -57,6 +59,7 @@ def train_deepcfr_for_coyote(self,iterations=10,current_state=None):
             advantage_buffer
         )
 
+
         # Periodically update strategy networks
         if i % 10 == 0:
 
@@ -64,7 +67,8 @@ def train_deepcfr_for_coyote(self,iterations=10,current_state=None):
                 self,
                 self.strategy_net,
                 self.advantage_net,
-                advantage_buffer
+                strategy_buffer,
+                advantages
             )
 
     return self.strategy_net

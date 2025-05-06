@@ -9,7 +9,7 @@ if __name__ == "__main__":
     print (f"SampleClient: {SampleClient}")
     predefs = [
         [SampleClient(player_name="PreAI1", is_ai=True), "PreAI1"],
-        [SampleClient(player_name="PreAI2", is_ai=True), "PreAI2"]
+        #[SampleClient(player_name="PreAI2", is_ai=True), "PreAI2"]
     ]
     
     arena = Arena(total_matches=5, predefined_clients=predefs)

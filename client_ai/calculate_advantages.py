@@ -25,11 +25,11 @@ def calculate_advantages(self, game_states, advantage_net):
         # If player won (has more life than others)
         if state_info["Is_coyoted"] == True:
             self.Is_coyoted = None
-            reward -= 1.0  # Lose
+            reward -= 100  # Lose
             print("コヨーテされた")
         elif state_info["Is_coyoted"] == False:
             self.Is_coyoted = None  
-            reward += 0.1  # Win
+            reward += 0.001  # Win
         else:
             reward += 0.0             
 
@@ -59,10 +59,10 @@ def calculate_advantages(self, game_states, advantage_net):
                 
                 if declared_value > game_sum * 1.2:
                     # Large penalty for over-declarations
-                    reward -= 1   
+                    reward -= 100   
                     print("宣言値が実際の合計の120%を超えた")
                 else:
-                    reward -= max(0.5, (declared_value - game_sum) / 100)   
+                    reward -= max(0.5, (declared_value - game_sum)*2)   
                     print("宣言値が実際の合計の120%を超えなかった")
             else:
                 # Small reward for close but under declarations
@@ -127,15 +127,17 @@ def calculate_advantages(self, game_states, advantage_net):
         legal_actions = state["legal_action"]
         
         # For each legal action, estimate its advantage
+        advantage_vector = np.zeros(141)  # 例: 141
         for action in legal_actions:
 
             if action == action_taken:
                 advantage = self.trajectory_value - action_values[action]# AIが選択した行動をdifine_rewardで計算した報酬から引く
             else:
                 advantage = -action_values[action]
-            
-            # Store advantage for this information set and action
-            info_set_key = f"player_state{hash(str(encoded_state.numpy().tobytes()))}"
-            advantages[info_set_key].append((action, advantage, encoded_state))
+
+            advantage_vector[action] = advantage
+        # Store advantage for this information set and action
+        info_set_key = f"player_state{hash(str(encoded_state.numpy().tobytes()))}"
+        advantages[info_set_key].append((encoded_state, advantage_vector))
 
     return advantages

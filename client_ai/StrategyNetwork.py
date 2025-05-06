@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import logging
 
 class StrategyNetwork:
     def __init__(self, total_sum, input_size, output_size=141):  # 入力サイズを318に固定
@@ -65,7 +66,16 @@ class StrategyNetwork:
             state = tf.concat([state, padding], axis=1)
         
         # ニューラルネットワークで予測
+        # 各行動のスコアが帰ってくる
         logits = self.model(state, training=False).numpy()[0] # 結果を取得
+        # scaling_factor = 0.01  # この値を調整（0.01～0.1の範囲で試す）
+        # logits = logits * scaling_factor
+        
+        # print(f"元のlogits範囲: {np.min(logits/scaling_factor):.2f}～{np.max(logits/scaling_factor):.2f}")
+        print(f"調整後のlogits範囲: {np.min(logits):.2f}～{np.max(logits):.2f}")
+        RED = '\033[31m'  # 赤色の開始
+        END = '\033[0m'   # 色の終了
+        #logging.info(f"{RED}logits: {logits}{END}")
             # コヨーテの選択確率を調整
         if legal_actions is not None and -1 in legal_actions:
             # 前のプレイヤーの宣言値と場の合計を考慮
@@ -75,11 +85,9 @@ class StrategyNetwork:
             if previous_declaration > current_sum:
                 # 前のプレイヤーの宣言が実際の合計より大きい場合
                 # コヨーテの確率を上げる
-                logits[0] += 2.0  # コヨーテのインデックスは0
-                            # 他の行動の確率を下げる
-                for i in range(1, len(logits)):
-                    logits[i] -= 0.5
-        
+                logits[0] += 5.0  # コヨーテのインデックスは0
+                            
+
         # 可能な行動のみに制限
         #-1から140まで
         if legal_actions is not None:
@@ -90,15 +98,22 @@ class StrategyNetwork:
         
         # ソフトマックスで確率分布に変換
         probabilities = np.exp(logits) / np.sum(np.exp(logits))
-
-        for action in range(len(probabilities)):
-            if action > self.total_sum * 0.8:  # 宣言値が既知の合計の80%を超える場合
-                probabilities[action] *= 0.7  # 確率を減らす
+        if legal_actions is not None:
+            for action in legal_actions:
+                if action > self.total_sum :  # 宣言値が既知の合計の80%を超える場合
+                    probabilities[action+1] *= 0.7  # 確率を減らす
         
         # 確率の正規化（小さい確率を0に）
-        threshold = 1e-5  # 閾値
+        threshold = 1e-9  # 閾値
         probabilities[probabilities < threshold] = 0
         probabilities = probabilities / np.sum(probabilities)  # 再正規化
+
+        if np.sum(probabilities) == 0:
+            # すべての確率が0になった場合、一様分布を適用
+            for action in legal_actions:
+                probabilities[action+1] = 1.0 / len(legal_actions)
+        else:
+            probabilities = probabilities / np.sum(probabilities)
         
         
         # 結果を辞書形式で返す

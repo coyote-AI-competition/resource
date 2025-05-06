@@ -1,4 +1,5 @@
 import random
+import logging
 def sample_from_distribution(probs, legal_actions):
     """
     確率分布から行動をサンプリングする
@@ -26,11 +27,11 @@ def sample_from_distribution(probs, legal_actions):
             valid_probs = [p / sum_probs for p in valid_probs]
         
         # 確率に基づいてアクションをサンプリング
-        print("valid_probs",valid_probs)
+        logging.info("valid_probs %s",valid_probs)
         chosen_action = random.choices(valid_actions, weights=valid_probs, k=1)[0]
     else:
         # 有効な確率がない場合はランダムに選択
-        print("valid_probsが空です。ランダムに選択します。")
+        logging.info("valid_probsが空です。ランダムに選択します。")
         chosen_action = random.choice(legal_actions)
     
     return chosen_action

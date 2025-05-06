@@ -59,11 +59,11 @@ class CFRTrainingEvaluator:
             encoded_state = encode_state(state)
             
             # 戦略ネットワークで宣言値を予測
-            action_probs = self.strategy_net.predict(encoded_state, state['legal_action'])
+            #action_probs = self.strategy_net.predict(encoded_state, state['legal_action'])
             
             # 最も確率の高い行動を選択
-            declaration = max(action_probs.items(), key=lambda x: x[1])[0]
-            
+            #declaration = max(action_probs.items(), key=lambda x: x[1])[0]
+            declaration = state['selectaction']
             # 実際の合計値
             actual_sum = state['sum']
             
@@ -200,8 +200,8 @@ def evaluate_cfr_training(self,current_state,iterations=50):
     # ネットワークの作成
     input_size = self.input_size
     output_size = 141
-    advantage_net = create_advantage_network(self)
-    strategy_net = StrategyNetwork(self.total_sum, input_size, output_size)
+    advantage_net = self.advantage_net
+    strategy_net = self.strategy_net
     
     # 評価用のインスタンス
     evaluator = CFRTrainingEvaluator(strategy_net, advantage_net)
