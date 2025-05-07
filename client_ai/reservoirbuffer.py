@@ -1,6 +1,6 @@
 import random
 class ReservoirBuffer:
-    def __init__(self, max_size=10000):
+    def __init__(self, max_size=5000):#10000
         self.buffer = []
         self.max_size = max_size
         

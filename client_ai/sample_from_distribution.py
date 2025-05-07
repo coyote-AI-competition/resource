@@ -32,6 +32,6 @@ def sample_from_distribution(probs, legal_actions):
     else:
         # 有効な確率がない場合はランダムに選択
         logging.info("valid_probsが空です。ランダムに選択します。")
-        chosen_action = random.choice(legal_actions)
+        chosen_action = legal_actions[1]
     
     return chosen_action

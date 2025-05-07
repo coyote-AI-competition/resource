@@ -25,7 +25,7 @@ def calculate_advantages(self, game_states, advantage_net):
         # If player won (has more life than others)
         if state_info["Is_coyoted"] == True:
             self.Is_coyoted = None
-            reward -= 100  # Lose
+            reward -= 10  # Lose
             print("コヨーテされた")
         elif state_info["Is_coyoted"] == False:
             self.Is_coyoted = None  
@@ -59,15 +59,15 @@ def calculate_advantages(self, game_states, advantage_net):
                 
                 if declared_value > game_sum * 1.2:
                     # Large penalty for over-declarations
-                    reward -= 100   
+                    reward -= 100 
                     print("宣言値が実際の合計の120%を超えた")
                 else:
-                    reward -= max(0.5, (declared_value - game_sum)*2)   
+                    reward -= max(0.5, (declared_value - game_sum))*10   
                     print("宣言値が実際の合計の120%を超えなかった")
             else:
                 # Small reward for close but under declarations
-                closeness = 1 - (game_sum - declared_value) / game_sum if game_sum > 0 else 0
-                reward += closeness * 0.5
+                #closeness = 1 - (game_sum - declared_value) / game_sum if game_sum > 0 else 0
+                reward += 1
         
         return reward              
      

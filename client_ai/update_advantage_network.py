@@ -16,7 +16,7 @@ def update_advantage_network(self,advantage_net, advantage, buffer, batch_size=3
     for info_set, advantage_data in advantage.items():
         for encoded_state, advantage_vector in advantage_data:
             logging.info("Advantage vector: %s", advantage_vector)
-            logging.info("Max advantage index: %s", np.argmax(advantage_vector), "Value:", np.max(advantage_vector))
+            logging.info("Max advantage index: %s, Value: %s", np.argmax(advantage_vector), np.max(advantage_vector))
             buffer.add((encoded_state, advantage_vector))
 
     #バッファに詰め込んだデータがbatch_sizeより少ない場合は訓練しない

@@ -38,6 +38,7 @@ class StrategyNetwork:
         )
         return model
     
+    #predictは、戦略ネットワークを使用して、各行動の確率分布を予測する
     def predict(self, state, legal_actions=None):
         """
         戦略ネットワークを使用して、各行動の確率分布を予測する
@@ -72,11 +73,27 @@ class StrategyNetwork:
         # logits = logits * scaling_factor
         
         # print(f"元のlogits範囲: {np.min(logits/scaling_factor):.2f}～{np.max(logits/scaling_factor):.2f}")
-        print(f"調整後のlogits範囲: {np.min(logits):.2f}～{np.max(logits):.2f}")
+        #print(f"調整後のlogits範囲: {np.min(logits):.2f}～{np.max(logits):.2f}")
         RED = '\033[31m'  # 赤色の開始
         END = '\033[0m'   # 色の終了
         #logging.info(f"{RED}logits: {logits}{END}")
             # コヨーテの選択確率を調整
+
+        # 可能な行動のみに制限
+        #-1から140まで
+        if legal_actions is not None:
+            mask = np.ones_like(logits) * -1e9
+            for action in legal_actions:
+                # 場の合計を超える宣言値の確率を0にする
+                if action > self.total_sum:
+                    #logging.info(f"total_sum: {self.total_sum}")
+                    # 場の合計を超える宣言値の確率を0にする
+                    continue  # maskは-1e9のまま
+                mask[action+1] = 0 # 1を足すのは、-1から始まるインデックスを考慮するため
+            logits = logits + mask # 許可されていない行動のスコアは -1e9 に近い極端に小さい値に設定
+            logging.info(f"logits: {logits}")
+            
+
         if legal_actions is not None and -1 in legal_actions:
             # 前のプレイヤーの宣言値と場の合計を考慮
             previous_declaration = legal_actions[1] - 1  # 前のプレイヤーの宣言値
@@ -85,16 +102,9 @@ class StrategyNetwork:
             if previous_declaration > current_sum:
                 # 前のプレイヤーの宣言が実際の合計より大きい場合
                 # コヨーテの確率を上げる
+                
                 logits[0] += 5.0  # コヨーテのインデックスは0
-                            
-
-        # 可能な行動のみに制限
-        #-1から140まで
-        if legal_actions is not None:
-            mask = np.ones_like(logits) * -1e9
-            for action in legal_actions:
-                mask[action+1] = 0 # 1を足すのは、-1から始まるインデックスを考慮するため
-            logits = logits + mask # 許可されていない行動のスコアは -1e9 に近い極端に小さい値に設定
+                logging.info(f"logits: {logits[0]}")
         
         # ソフトマックスで確率分布に変換
         probabilities = np.exp(logits) / np.sum(np.exp(logits))

@@ -256,11 +256,13 @@ def evaluate_cfr_training(self,current_state,iterations=50):
     
     # 結果の可視化
     metrics_fig = evaluator.plot_all_metrics()
-    metrics_fig.savefig('cfr_training_metrics.png')
+    save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'save_picture')
+    os.makedirs(save_dir, exist_ok=True)
+    metrics_fig.savefig(os.path.join(save_dir, 'cfr_training_metrics.png'))
     
     # 宣言値の分布を可視化
     dist_fig, overestimation_rate = evaluator.plot_declaration_distribution(current_state)
-    dist_fig.savefig('declaration_distribution.png')
+    dist_fig.savefig(os.path.join(save_dir, 'declaration_distribution.png'))
     
     print(f"Training evaluation complete. Final overestimation rate: {overestimation_rate:.2f}")
     return evaluator
