@@ -26,7 +26,7 @@ _GAME_TYPE = pyspiel.GameType(
     dynamics=pyspiel.GameType.Dynamics.SEQUENTIAL,
     chance_mode=pyspiel.GameType.ChanceMode.EXPLICIT_STOCHASTIC,
     information=pyspiel.GameType.Information.IMPERFECT_INFORMATION,
-    utility=pyspiel.GameType.Utility.ZERO_SUM,
+    utility=pyspiel.GameType.Utility.GENERAL_SUM,
     reward_model=pyspiel.GameType.RewardModel.TERMINAL,
     max_num_players=6,
     min_num_players=2,
@@ -106,13 +106,21 @@ class CoyoteState(pyspiel.State):
         self.is_double_card = False
         self.is_shuffle_card = False
         self._expecting_draw = True  # チャンスノードに移行するかどうか
-        self._used_cards = []  # 使用済みカード
         self._all_cards = [-10, -5, -5, 0, 0, 0,
                       1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3,
                       4, 4, 4, 4, 5, 5, 5, 5, 
                       10, 10, 10, 15, 15, 20, 
                       100, 101, 102, 103]
+        # randomにカードを捨てる
+        discard_cards_num = rnd.randint(0, len(self.deck.cards) - 1)
+        for _ in range(discard_cards_num):
+            discard_card = self.deck.draw()
+            self.deck.cashed_cards.append(discard_card)
+            self.deck.cards.remove(discard_card)
+        self._used_cards = []  # 使用済みカード
+    
         # print("Game started!")
+
 
     def current_player(self):
         if self._is_terminal:
@@ -263,7 +271,7 @@ class CoyoteState(pyspiel.State):
             self._player_lives[loser] -= 1
             if self._player_lives[loser] <= 0:
                 self._player_active[loser] = False
-            self._is_terminal = sum(self._player_active) <= 1
+                self._is_terminal = True
             self.current_declaration = 0
 
             if self.is_shuffle_card:
@@ -293,10 +301,8 @@ class CoyoteState(pyspiel.State):
         return self._is_terminal
 
     def returns(self):
-        survive = sum(self._player_active)
-        points = _NUM_PLAYERS - survive
-        reward_ls = np.array([points/survive if self._player_active[i] else -1 for i in range(_NUM_PLAYERS)])
-        return reward_ls / max(reward_ls)  # 正規化
+        reward_ls = np.array([1 if self._player_active[i] else -1 for i in range(_NUM_PLAYERS)])
+        return reward_ls
     
     def information_state_string(self, player=None):
         if player is None:
@@ -328,44 +334,40 @@ class CoyoteState(pyspiel.State):
         if player is None:
             player = self._cur_player
         # プレイヤーの情報状態をテンソルに変換
-        # 宣言値 1 + プレイヤーのライフ _NUM_PLAYERS + プレイヤーの手札 (_NUM_PLAYERS - 1) * 4 + remaining_cards 15 + current_estimate + the difference between the current estimate and the current declaration
+        # 宣言値 1 + プレイヤーの手札 (_NUM_PLAYERS - 1) * 4 + remaining_cards 15 + current_estimate + the difference between the current estimate and the current declaration
         tensor = np.zeros(1 + _NUM_PLAYERS + (_NUM_PLAYERS - 1)*4 + 15 + 1 + 1, dtype=np.float32)
 
         # 現在の宣言値を入れる
         tensor[0] = self.current_declaration
 
-        # プレイヤーのライフを入れる
-        for i in range(_NUM_PLAYERS):
-            tensor[i + 1] = self._player_lives[(i+player) % _NUM_PLAYERS]
-
         # プレイヤーの手札を入れる
         for i in range(_NUM_PLAYERS-1):
             # (value,is_max,is_double,is_question)の形で各プレイヤー入れていく
             if self._cards[(i+player+1) % _NUM_PLAYERS] == 102:
-                tensor[1 + _NUM_PLAYERS + i*4] = 0
-                tensor[1 + _NUM_PLAYERS + i*4 + 1] = 1
-                tensor[1 + _NUM_PLAYERS + i*4 + 2] = 0
-                tensor[1 + _NUM_PLAYERS + i*4 + 3] = 0
+                tensor[1 + i*4] = 0
+                tensor[1 + i*4 + 1] = 1
+                tensor[1 + i*4 + 2] = 0
+                tensor[1 + i*4 + 3] = 0
             elif self._cards[(i+player+1) % _NUM_PLAYERS] == 100:
-                tensor[1 + _NUM_PLAYERS + i*4] = 0
-                tensor[1 + _NUM_PLAYERS + i*4 + 1] = 0
-                tensor[1 + _NUM_PLAYERS + i*4 + 2] = 1
-                tensor[1 + _NUM_PLAYERS + i*4 + 3] = 0
+                tensor[1 + i*4] = 0
+                tensor[1 + i*4 + 1] = 0
+                tensor[1 + i*4 + 2] = 1
+                tensor[1 + i*4 + 3] = 0
             elif self._cards[(i+player+1) % _NUM_PLAYERS] == 103:
-                tensor[1 + _NUM_PLAYERS + i*4] = 0
-                tensor[1 + _NUM_PLAYERS + i*4 + 1] = 0
-                tensor[1 + _NUM_PLAYERS + i*4 + 2] = 0
-                tensor[1 + _NUM_PLAYERS + i*4 + 3] = 1
+                tensor[1 + i*4] = 0
+                tensor[1 + i*4 + 1] = 0
+                tensor[1 + i*4 + 2] = 0
+                tensor[1 + i*4 + 3] = 1
             elif self._cards[(i+player+1) % _NUM_PLAYERS] == 101:
-                tensor[1 + _NUM_PLAYERS + i*4] = 0
-                tensor[1 + _NUM_PLAYERS + i*4 + 1] = 0
-                tensor[1 + _NUM_PLAYERS + i*4 + 2] = 0
-                tensor[1 + _NUM_PLAYERS + i*4 + 3] = 0
+                tensor[1 + i*4] = 0
+                tensor[1 + i*4 + 1] = 0
+                tensor[1 + i*4 + 2] = 0
+                tensor[1 + i*4 + 3] = 0
             else:
-                tensor[1 + _NUM_PLAYERS + i*4] = self._cards[(i+player+1) % _NUM_PLAYERS]
-                tensor[1 + _NUM_PLAYERS + i*4 + 1] = 0
-                tensor[1 + _NUM_PLAYERS + i*4 + 2] = 0
-                tensor[1 + _NUM_PLAYERS + i*4 + 3] = 0
+                tensor[1 + i*4] = self._cards[(i+player+1) % _NUM_PLAYERS]
+                tensor[1 + i*4 + 1] = 0
+                tensor[1 + i*4 + 2] = 0
+                tensor[1 + i*4 + 3] = 0
 
         cards_kind = [-10, -5, 0, 1, 2, 3, 4, 5, 10, 15, 20, 100, 101, 102, 103]
 
@@ -380,7 +382,7 @@ class CoyoteState(pyspiel.State):
 
         # 残りのカードを入れる
         for i in range(15):
-            tensor[1 + _NUM_PLAYERS + (_NUM_PLAYERS - 1)*4 + i] = np.sum([1 for card in visible_cards if card == cards_kind[i]])
+            tensor[1 + (_NUM_PLAYERS - 1)*4 + i] = np.sum([1 for card in visible_cards if card == cards_kind[i]])
 
         # 現在の相手のカードの合計値を入れる
         current_estimate = 0
@@ -407,9 +409,9 @@ class CoyoteState(pyspiel.State):
         if double_flag:
             current_estimate *= 2
 
-        tensor[1 + _NUM_PLAYERS + (_NUM_PLAYERS - 1)*4 + 15] = current_estimate
+        tensor[1 + (_NUM_PLAYERS - 1)*4 + 15] = current_estimate
         # 現在の宣言値との差を入れる
-        tensor[1 + _NUM_PLAYERS + (_NUM_PLAYERS - 1)*4 + 16] = current_estimate - self.current_declaration
+        tensor[1 + (_NUM_PLAYERS - 1)*4 + 16] = current_estimate - self.current_declaration
 
         return tensor
 

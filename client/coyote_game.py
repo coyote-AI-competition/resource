@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     # while True:
     # 保存先パス
-    ckpt_path = os.path.join(dirname, "checkpoints", "deep_cfr.ckpt")
+    ckpt_path = os.path.join(dirname, f"checkpoints_{_NUM_PLAYERS}", "deep_cfr.ckpt")
     # for _ in tqdm.tqdm(range(100000)):
     #     # セッション開始
     with tf.Session() as sess:
@@ -39,13 +39,13 @@ if __name__ == "__main__":
         solver = deep_cfr.DeepCFRSolver(
             game=game,
             session=sess,
-            policy_network_layers=[64, 64],
-            advantage_network_layers=[64, 64],
+            policy_network_layers=[256, 256],
+            advantage_network_layers=[256, 256],
             num_iterations=5,
-            num_traversals=100,
+            num_traversals=1000,
             learning_rate=1e-4,
-            batch_size_advantage=128,
-            batch_size_strategy=128,
+            batch_size_advantage=32,
+            batch_size_strategy=32,
             memory_capacity=1e6
         )
 
@@ -61,17 +61,17 @@ if __name__ == "__main__":
             saver.restore(sess, ckpt_path)
             print("✅ Model restored!")
             # epochの復元
-            with open(os.path.join(dirname, "epoch.txt"), "r") as f:
+            with open(os.path.join(dirname, f"epoch_{_NUM_PLAYERS}.txt"), "r") as f:
                 epoch = int(f.read())
             print("Epoch:", epoch)
 
             # Advantage lossesの復元
-            with open(os.path.join(dirname, "advantage_losses.npy"), "rb") as f:
+            with open(os.path.join(dirname, f"advantage_losses_{_NUM_PLAYERS}.npy"), "rb") as f:
                 advantage_losses_history = np.load(f)
             # print("Advantage losses:", advantage_losses_history[-1])
 
             # Policy lossの復元
-            with open(os.path.join(dirname, "policy_loss.npy"), "rb") as f:
+            with open(os.path.join(dirname, f"policy_loss_{_NUM_PLAYERS}.npy"), "rb") as f:
                 policy_loss_history = np.load(f)
             print("Policy loss:", policy_loss_history[-1])
         
@@ -93,7 +93,7 @@ if __name__ == "__main__":
             saver.save(sess, ckpt_path)
             print("💾 Model saved to:", ckpt_path)
 
-            with open(os.path.join(dirname, "epoch.txt"), "w") as f:
+            with open(os.path.join(dirname, f"epoch_{_NUM_PLAYERS}.txt"), "w") as f:
                 f.write(str(i + 1))
 
             advantage_losses_ls = np.array([advantage_losses[i] for i in range(_NUM_PLAYERS)]).reshape(-1, _NUM_PLAYERS)
@@ -108,8 +108,8 @@ if __name__ == "__main__":
             policy_loss_history = np.append(policy_loss_history, policy_loss)
 
             # 保存
-            np.save(os.path.join(dirname, "advantage_losses.npy"), advantage_losses_history)
-            np.save(os.path.join(dirname, "policy_loss.npy"), policy_loss_history)
+            np.save(os.path.join(dirname, f"advantage_losses_{_NUM_PLAYERS}.npy"), advantage_losses_history)
+            np.save(os.path.join(dirname, f"policy_loss_{_NUM_PLAYERS}.npy"), policy_loss_history)
 
             # plot loss
             for i in range(_NUM_PLAYERS):
@@ -119,7 +119,7 @@ if __name__ == "__main__":
             plt.yscale('log')
             plt.title("DeepCFR Advantage Loss")
             plt.legend()
-            plt.savefig(os.path.join(dirname, "advantage_loss.png"))
+            plt.savefig(os.path.join(dirname, f"advantage_loss_{_NUM_PLAYERS}.png"))
             plt.close()
             
             # plot policy loss
@@ -129,7 +129,7 @@ if __name__ == "__main__":
             plt.ylabel("Loss")
             plt.title("DeepCFR Loss")
             plt.legend()
-            plt.savefig(os.path.join(dirname, "policy_loss.png"))
+            plt.savefig(os.path.join(dirname, f"policy_loss_{_NUM_PLAYERS}.png"))
             plt.close()
 
         print("✅ Training complete!")

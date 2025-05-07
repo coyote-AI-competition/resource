@@ -178,4 +178,6 @@ env.txt
 setup_session.sh
 
 nohup.out
-/client/checkpoints
+/client/checkpoints_*/
+/client/*.npy
+/client/*.txt
