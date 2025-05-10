@@ -6,15 +6,15 @@ if __name__ == "__main__":
     #
     from client.sample_arena_client import PlusOneClient as PlusOneClient
     from client.sample_arena_client import ConstClient as ConstClient
-    from client.sample_arena_client import EpsilonClient as EpsilonClient
+    from client.yaduya import RLClient as RLClient
     
     predefs = [
         [PlusOneClient(player_name="PreAI1", is_ai=True), "PreAI1"],
         [PlusOneClient(player_name="PreAI2", is_ai=True), "PreAI2"],
         [PlusOneClient(player_name="PreAI3", is_ai=True), "PreAI3"],
-        [PlusOneClient(player_name="PreAI4", is_ai=True), "PreAI4"],
-        [PlusOneClient(player_name="PreAI5", is_ai=True), "PreAI5"],
-        [PlusOneClient(player_name="PreAI6", is_ai=True), "PreAI6"],
+        [RLClient(player_name="PreAI4", is_ai=True), "PreAI4"],
+        [RLClient(player_name="PreAI5", is_ai=True), "PreAI5"],
+        [RLClient(player_name="PreAI6", is_ai=True), "PreAI6"],
     ]
     
     arena = Arena(total_matches=5, predefined_clients=predefs)
