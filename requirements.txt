@@ -4,4 +4,3 @@ requests
 tqdm
 websocket-client
 coyote-AI-competition
-tensorflow

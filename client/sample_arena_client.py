@@ -5,11 +5,11 @@ from pathlib import Path
 from collections import deque
 import tensorflow as tf
 from .not_websocket_client import Client
-from client_ai.train_deepcfr_for_coyote import train_deepcfr_for_coyote
-from client_ai.make_decision import make_decision
-from client_ai.StrategyNetwork import StrategyNetwork
-from client_ai.create_advantage_network import create_advantage_network
-from client_ai.CFRTrainingEvaluator import evaluate_cfr_training,visualize_model_prediction
+from Back.train_deepcfr_for_coyote import train_deepcfr_for_coyote
+from Back.make_decision import make_decision
+from Back.StrategyNetwork import StrategyNetwork
+from Back.create_advantage_network import create_advantage_network
+from Back.CFRTrainingEvaluator import evaluate_cfr_training,visualize_model_prediction
 from datetime import datetime
 import random
 import logging
@@ -117,6 +117,16 @@ class SampleClient(Client):
             "Is_coyoted": self.Is_coyoted
         }
 
+        if actions is not None and -1 in actions:
+            # 前のプレイヤーの宣言値と場の合計を考慮
+            previous_declaration = actions[1] - 1  # 前のプレイヤーの宣言値
+            current_sum = self.total_sum  # 場の合計
+            
+            if previous_declaration > current_sum:
+                # 前のプレイヤーの宣言が実際の合計より大きい場合                
+                return -1 
+        
+
         select_action = make_decision(state, self.strategy_net)
         print(f"選択された行動: {select_action}")
 
@@ -143,6 +153,6 @@ class SampleClient(Client):
 
         RED = '\033[31m'
         END = '\033[0m'
-        print(RED  + str(select_action) +  END)
+        logging.info("select_action: %s" ,select_action)
         return  select_action
       

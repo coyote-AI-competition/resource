@@ -1,0 +1,1234 @@
+{
+    "round_info": [
+        {
+            "round_count": 1,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 3,
+                    "card": 2
+                },
+                {
+                    "name": "AI_2",
+                    "life": 3,
+                    "card": 10
+                },
+                {
+                    "name": "AI_3",
+                    "life": 3,
+                    "card": 0
+                },
+                {
+                    "name": "AI_4",
+                    "life": 3,
+                    "card": 2
+                },
+                {
+                    "name": "AI_5",
+                    "life": 3,
+                    "card": 100
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 103
+                }
+            ],
+            "deck": [
+                101,
+                2,
+                4,
+                4,
+                5,
+                3,
+                3,
+                0,
+                1,
+                2,
+                -10,
+                4,
+                4,
+                0,
+                20,
+                10,
+                10,
+                3,
+                5,
+                5,
+                102,
+                5,
+                1,
+                15,
+                1,
+                -5,
+                1,
+                3,
+                -5
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "PreAI1",
+                    "action": 48
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "AI_2",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 2,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 3,
+                    "card": -5
+                },
+                {
+                    "name": "AI_2",
+                    "life": 2,
+                    "card": 3
+                },
+                {
+                    "name": "AI_3",
+                    "life": 3,
+                    "card": 1
+                },
+                {
+                    "name": "AI_4",
+                    "life": 3,
+                    "card": -5
+                },
+                {
+                    "name": "AI_5",
+                    "life": 3,
+                    "card": 1
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 15
+                }
+            ],
+            "deck": [
+                101,
+                2,
+                4,
+                4,
+                5,
+                3,
+                3,
+                0,
+                1,
+                2,
+                -10,
+                4,
+                4,
+                0,
+                20,
+                10,
+                10,
+                3,
+                5,
+                5,
+                102,
+                5,
+                1
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_2",
+                    "action": 4
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "AI_3",
+                    "action": 9
+                },
+                {
+                    "turn_count": 2,
+                    "turn_player": "AI_4",
+                    "action": 13
+                },
+                {
+                    "turn_count": 3,
+                    "turn_player": "AI_5",
+                    "action": 16
+                },
+                {
+                    "turn_count": 4,
+                    "turn_player": "AI_6",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 3,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 3,
+                    "card": 1
+                },
+                {
+                    "name": "AI_2",
+                    "life": 2,
+                    "card": 5
+                },
+                {
+                    "name": "AI_3",
+                    "life": 3,
+                    "card": 102
+                },
+                {
+                    "name": "AI_4",
+                    "life": 3,
+                    "card": 5
+                },
+                {
+                    "name": "AI_5",
+                    "life": 2,
+                    "card": 5
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 3
+                }
+            ],
+            "deck": [
+                101,
+                2,
+                4,
+                4,
+                5,
+                3,
+                3,
+                0,
+                1,
+                2,
+                -10,
+                4,
+                4,
+                0,
+                20,
+                10,
+                10
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_6",
+                    "action": 3
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "PreAI1",
+                    "action": 14
+                },
+                {
+                    "turn_count": 2,
+                    "turn_player": "AI_2",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 4,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 3,
+                    "card": 10
+                },
+                {
+                    "name": "AI_2",
+                    "life": 1,
+                    "card": 10
+                },
+                {
+                    "name": "AI_3",
+                    "life": 3,
+                    "card": 20
+                },
+                {
+                    "name": "AI_4",
+                    "life": 3,
+                    "card": 0
+                },
+                {
+                    "name": "AI_5",
+                    "life": 2,
+                    "card": 4
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 4
+                }
+            ],
+            "deck": [
+                101,
+                2,
+                4,
+                4,
+                5,
+                3,
+                3,
+                0,
+                1,
+                2,
+                -10
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_2",
+                    "action": 5
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "AI_3",
+                    "action": 8
+                },
+                {
+                    "turn_count": 2,
+                    "turn_player": "AI_4",
+                    "action": 9
+                },
+                {
+                    "turn_count": 3,
+                    "turn_player": "AI_5",
+                    "action": 14
+                },
+                {
+                    "turn_count": 4,
+                    "turn_player": "AI_6",
+                    "action": 16
+                },
+                {
+                    "turn_count": 5,
+                    "turn_player": "PreAI1",
+                    "action": 26
+                },
+                {
+                    "turn_count": 6,
+                    "turn_player": "AI_2",
+                    "action": 30
+                },
+                {
+                    "turn_count": 7,
+                    "turn_player": "AI_3",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 5,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 3,
+                    "card": -10
+                },
+                {
+                    "name": "AI_2",
+                    "life": 1,
+                    "card": 2
+                },
+                {
+                    "name": "AI_3",
+                    "life": 2,
+                    "card": 1
+                },
+                {
+                    "name": "AI_4",
+                    "life": 3,
+                    "card": 0
+                },
+                {
+                    "name": "AI_5",
+                    "life": 2,
+                    "card": 3
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 3
+                }
+            ],
+            "deck": [
+                101,
+                2,
+                4,
+                4,
+                5
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_3",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 6,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 3,
+                    "card": 5
+                },
+                {
+                    "name": "AI_2",
+                    "life": 0,
+                    "card": 2
+                },
+                {
+                    "name": "AI_3",
+                    "life": 2,
+                    "card": 4
+                },
+                {
+                    "name": "AI_4",
+                    "life": 3,
+                    "card": 4
+                },
+                {
+                    "name": "AI_5",
+                    "life": 2,
+                    "card": 2
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 101
+                }
+            ],
+            "deck": [
+                3,
+                5,
+                1,
+                101,
+                15,
+                15,
+                -10,
+                20,
+                102,
+                3,
+                2,
+                2,
+                1,
+                5,
+                4,
+                4,
+                2,
+                0,
+                1,
+                -5,
+                5,
+                10,
+                3,
+                10,
+                -5,
+                0,
+                10,
+                4,
+                5,
+                103,
+                1,
+                0,
+                4,
+                100,
+                2,
+                3
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_4",
+                    "action": 5
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "AI_5",
+                    "action": 10
+                },
+                {
+                    "turn_count": 2,
+                    "turn_player": "AI_6",
+                    "action": 14
+                },
+                {
+                    "turn_count": 3,
+                    "turn_player": "PreAI1",
+                    "action": 16
+                },
+                {
+                    "turn_count": 4,
+                    "turn_player": "AI_3",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 7,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 2,
+                    "card": 10
+                },
+                {
+                    "name": "AI_2",
+                    "life": 0,
+                    "card": 2
+                },
+                {
+                    "name": "AI_3",
+                    "life": 2,
+                    "card": -10
+                },
+                {
+                    "name": "AI_4",
+                    "life": 3,
+                    "card": -5
+                },
+                {
+                    "name": "AI_5",
+                    "life": 2,
+                    "card": 101
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 5
+                }
+            ],
+            "deck": [
+                1,
+                3,
+                100,
+                2,
+                20,
+                10,
+                0,
+                0,
+                4,
+                5,
+                103,
+                3,
+                3,
+                2,
+                10,
+                2,
+                1,
+                0,
+                2,
+                1,
+                4,
+                3,
+                -5,
+                5,
+                4,
+                5,
+                4,
+                15,
+                1,
+                15,
+                102
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_3",
+                    "action": 1
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "AI_4",
+                    "action": 6
+                },
+                {
+                    "turn_count": 2,
+                    "turn_player": "AI_5",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 8,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 2,
+                    "card": 10
+                },
+                {
+                    "name": "AI_2",
+                    "life": 0,
+                    "card": 2
+                },
+                {
+                    "name": "AI_3",
+                    "life": 2,
+                    "card": 3
+                },
+                {
+                    "name": "AI_4",
+                    "life": 2,
+                    "card": 102
+                },
+                {
+                    "name": "AI_5",
+                    "life": 2,
+                    "card": 4
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 0
+                }
+            ],
+            "deck": [
+                15,
+                3,
+                5,
+                2,
+                4,
+                4,
+                5,
+                2,
+                5,
+                1,
+                10,
+                103,
+                101,
+                2,
+                5,
+                3,
+                1,
+                15,
+                3,
+                4,
+                1,
+                -5,
+                -10,
+                20,
+                1,
+                -5,
+                10,
+                100,
+                2,
+                0,
+                0
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_5",
+                    "action": 1
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "AI_6",
+                    "action": 4
+                },
+                {
+                    "turn_count": 2,
+                    "turn_player": "PreAI1",
+                    "action": 6
+                },
+                {
+                    "turn_count": 3,
+                    "turn_player": "AI_3",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 9,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 2,
+                    "card": 0
+                },
+                {
+                    "name": "AI_2",
+                    "life": 0,
+                    "card": 2
+                },
+                {
+                    "name": "AI_3",
+                    "life": 1,
+                    "card": 0
+                },
+                {
+                    "name": "AI_4",
+                    "life": 2,
+                    "card": 2
+                },
+                {
+                    "name": "AI_5",
+                    "life": 2,
+                    "card": 100
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 10
+                }
+            ],
+            "deck": [
+                15,
+                3,
+                5,
+                2,
+                4,
+                4,
+                5,
+                2,
+                5,
+                1,
+                10,
+                103,
+                101,
+                2,
+                5,
+                3,
+                1,
+                15,
+                3,
+                4,
+                1,
+                -5,
+                -10,
+                20,
+                1,
+                -5
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_3",
+                    "action": 3
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "AI_4",
+                    "action": 4
+                },
+                {
+                    "turn_count": 2,
+                    "turn_player": "AI_5",
+                    "action": 9
+                },
+                {
+                    "turn_count": 3,
+                    "turn_player": "AI_6",
+                    "action": 12
+                },
+                {
+                    "turn_count": 4,
+                    "turn_player": "PreAI1",
+                    "action": 17
+                },
+                {
+                    "turn_count": 5,
+                    "turn_player": "AI_3",
+                    "action": 22
+                },
+                {
+                    "turn_count": 6,
+                    "turn_player": "AI_4",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 10,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 2,
+                    "card": -5
+                },
+                {
+                    "name": "AI_2",
+                    "life": 0,
+                    "card": 2
+                },
+                {
+                    "name": "AI_3",
+                    "life": 1,
+                    "card": 1
+                },
+                {
+                    "name": "AI_4",
+                    "life": 1,
+                    "card": 20
+                },
+                {
+                    "name": "AI_5",
+                    "life": 2,
+                    "card": -10
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": -5
+                }
+            ],
+            "deck": [
+                15,
+                3,
+                5,
+                2,
+                4,
+                4,
+                5,
+                2,
+                5,
+                1,
+                10,
+                103,
+                101,
+                2,
+                5,
+                3,
+                1,
+                15,
+                3,
+                4,
+                1
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_4",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 11,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 2,
+                    "card": 1
+                },
+                {
+                    "name": "AI_2",
+                    "life": 0,
+                    "card": 2
+                },
+                {
+                    "name": "AI_3",
+                    "life": 1,
+                    "card": 4
+                },
+                {
+                    "name": "AI_4",
+                    "life": 0,
+                    "card": 20
+                },
+                {
+                    "name": "AI_5",
+                    "life": 2,
+                    "card": 3
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 15
+                }
+            ],
+            "deck": [
+                15,
+                3,
+                5,
+                2,
+                4,
+                4,
+                5,
+                2,
+                5,
+                1,
+                10,
+                103,
+                101,
+                2,
+                5,
+                3,
+                1
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_5",
+                    "action": 5
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "AI_6",
+                    "action": 10
+                },
+                {
+                    "turn_count": 2,
+                    "turn_player": "PreAI1",
+                    "action": 17
+                },
+                {
+                    "turn_count": 3,
+                    "turn_player": "AI_3",
+                    "action": 18
+                },
+                {
+                    "turn_count": 4,
+                    "turn_player": "AI_5",
+                    "action": 33
+                },
+                {
+                    "turn_count": 5,
+                    "turn_player": "AI_6",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 12,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 2,
+                    "card": 1
+                },
+                {
+                    "name": "AI_2",
+                    "life": 0,
+                    "card": 2
+                },
+                {
+                    "name": "AI_3",
+                    "life": 1,
+                    "card": 3
+                },
+                {
+                    "name": "AI_4",
+                    "life": 0,
+                    "card": 20
+                },
+                {
+                    "name": "AI_5",
+                    "life": 1,
+                    "card": 5
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 2
+                }
+            ],
+            "deck": [
+                15,
+                3,
+                5,
+                2,
+                4,
+                4,
+                5,
+                2,
+                5,
+                1,
+                10,
+                103,
+                101
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_6",
+                    "action": 3
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "PreAI1",
+                    "action": 12
+                },
+                {
+                    "turn_count": 2,
+                    "turn_player": "AI_3",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 13,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 1,
+                    "card": 101
+                },
+                {
+                    "name": "AI_2",
+                    "life": 0,
+                    "card": 2
+                },
+                {
+                    "name": "AI_3",
+                    "life": 1,
+                    "card": 103
+                },
+                {
+                    "name": "AI_4",
+                    "life": 0,
+                    "card": 20
+                },
+                {
+                    "name": "AI_5",
+                    "life": 1,
+                    "card": 10
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 1
+                }
+            ],
+            "deck": [
+                15,
+                3,
+                5,
+                2,
+                4,
+                4,
+                5,
+                2
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_3",
+                    "action": 3
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "AI_5",
+                    "action": 6
+                },
+                {
+                    "turn_count": 2,
+                    "turn_player": "AI_6",
+                    "action": 10
+                },
+                {
+                    "turn_count": 3,
+                    "turn_player": "PreAI1",
+                    "action": 12
+                },
+                {
+                    "turn_count": 4,
+                    "turn_player": "AI_3",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 14,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 1,
+                    "card": 1
+                },
+                {
+                    "name": "AI_2",
+                    "life": 0,
+                    "card": 2
+                },
+                {
+                    "name": "AI_3",
+                    "life": 0,
+                    "card": 103
+                },
+                {
+                    "name": "AI_4",
+                    "life": 0,
+                    "card": 20
+                },
+                {
+                    "name": "AI_5",
+                    "life": 1,
+                    "card": 101
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": 4
+                }
+            ],
+            "deck": [
+                2,
+                4,
+                10,
+                103,
+                -10,
+                2,
+                0,
+                3,
+                100,
+                0,
+                102,
+                15,
+                5,
+                1,
+                5,
+                1,
+                -5,
+                4,
+                10,
+                3,
+                5,
+                1,
+                15,
+                10,
+                3,
+                2,
+                2,
+                0,
+                -5,
+                20,
+                3,
+                5,
+                4
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_5",
+                    "action": 1
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "AI_6",
+                    "action": 2
+                },
+                {
+                    "turn_count": 2,
+                    "turn_player": "PreAI1",
+                    "action": 5
+                },
+                {
+                    "turn_count": 3,
+                    "turn_player": "AI_5",
+                    "action": -1
+                }
+            ]
+        },
+        {
+            "round_count": 15,
+            "player_info": [
+                {
+                    "name": "PreAI1",
+                    "life": 1,
+                    "card": 5
+                },
+                {
+                    "name": "AI_2",
+                    "life": 0,
+                    "card": 2
+                },
+                {
+                    "name": "AI_3",
+                    "life": 0,
+                    "card": 103
+                },
+                {
+                    "name": "AI_4",
+                    "life": 0,
+                    "card": 20
+                },
+                {
+                    "name": "AI_5",
+                    "life": 0,
+                    "card": 101
+                },
+                {
+                    "name": "AI_6",
+                    "life": 3,
+                    "card": -10
+                }
+            ],
+            "deck": [
+                2,
+                2,
+                2,
+                101,
+                4,
+                4,
+                0,
+                10,
+                1,
+                -5,
+                10,
+                5,
+                15,
+                3,
+                20,
+                1,
+                0,
+                3,
+                3,
+                102,
+                2,
+                5,
+                5,
+                -5,
+                103,
+                15,
+                4,
+                4,
+                1,
+                100,
+                0,
+                1,
+                10,
+                3
+            ],
+            "turn_info": [
+                {
+                    "turn_count": 0,
+                    "turn_player": "AI_6",
+                    "action": 5
+                },
+                {
+                    "turn_count": 1,
+                    "turn_player": "PreAI1",
+                    "action": 6
+                },
+                {
+                    "turn_count": 2,
+                    "turn_player": "AI_6",
+                    "action": 7
+                },
+                {
+                    "turn_count": 3,
+                    "turn_player": "PreAI1",
+                    "action": 8
+                },
+                {
+                    "turn_count": 4,
+                    "turn_player": "AI_6",
+                    "action": -1
+                }
+            ]
+        }
+    ]
+}
