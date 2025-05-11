@@ -5,16 +5,16 @@ from pathlib import Path
 from collections import deque
 import tensorflow as tf
 from .not_websocket_client import Client
-from Back.train_deepcfr_for_coyote import train_deepcfr_for_coyote
-from Back.make_decision import make_decision
-from Back.StrategyNetwork import StrategyNetwork
-from Back.create_advantage_network import create_advantage_network
-from Back.CFRTrainingEvaluator import evaluate_cfr_training,visualize_model_prediction
+from .Back.train_deepcfr_for_coyote import train_deepcfr_for_coyote
+from .Back.make_decision import make_decision
+from .Back.StrategyNetwork import StrategyNetwork
+from .Back.create_advantage_network import create_advantage_network
+from .Back.CFRTrainingEvaluator import evaluate_cfr_training,visualize_model_prediction
 from datetime import datetime
 import random
 import logging
 
-class SampleClient(Client):
+#class SampleClient(Client):
     def __init__(self, player_name, is_ai=True):
         super().__init__()
         # strategy_netsを初期化
