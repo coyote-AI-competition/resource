@@ -14,7 +14,7 @@ from datetime import datetime
 import random
 import logging
 
-#class SampleClient(Client):
+class SampleClient(Client):
     def __init__(self, player_name, is_ai=True):
         super().__init__()
         # strategy_netsを初期化
