@@ -38,7 +38,7 @@ def encode_state(state):
         
         # プレイヤーの位置関係（次のプレイヤーか前のプレイヤーか）
         position_encoding = [
-             1 if player["is_next"] else 0,
+            1 if player["is_next"] else 0,
             1 if player["is_prev"] else 0
         ]
         
