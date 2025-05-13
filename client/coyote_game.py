@@ -67,12 +67,12 @@ if __name__ == "__main__":
 
             # Advantage lossesの復元
             with open(os.path.join(dirname, f"advantage_losses_{_NUM_PLAYERS}.npy"), "rb") as f:
-                advantage_losses_history = np.load(f)
+                advantage_losses_history = np.load(f, allow_pickle=True)
             # print("Advantage losses:", advantage_losses_history[-1])
 
             # Policy lossの復元
             with open(os.path.join(dirname, f"policy_loss_{_NUM_PLAYERS}.npy"), "rb") as f:
-                policy_loss_history = np.load(f)
+                policy_loss_history = np.load(f, allow_pickle=True)
             print("Policy loss:", policy_loss_history[-1])
         
         else:
