@@ -127,7 +127,7 @@ class Log:
         log_folder = "./log/"
         retry_count = 0
 
-               # ログフォルダが存在しない場合は作成
+        # ログフォルダが存在しない場合は作成
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)
 
@@ -442,7 +442,7 @@ class Server(RoomManager):
                 others_info = get_others_info(turn_player_sid)
                 min_action = room.last_action + 1
                 #TODO legal_actionを正しいものに変更
-                room.legal_action = [-1, min_action, 120]
+                room.legal_action = [-1, min_action, 140]
                 log_info = room.logs["round_info"][-1]["turn_info"]
                 # ai だったら10秒待つ
                 if is_turn_player_ai:
