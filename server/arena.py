@@ -224,7 +224,7 @@ class Arena:
             
             # sum_of_others = self.sum_of_others_cards(other_cards)
             sum_of_others = self.convert_card(other_cards, True)
-            legal_actions = [-1, last_call+1, 120]
+            legal_actions = [-1, last_call+1, 140]
 
             # turn_handling相当
             turn_data = {
