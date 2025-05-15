@@ -9,26 +9,22 @@ import numpy as np
 import logging
 def train_deepcfr_for_coyote(self,iterations=10,current_state=None):
     """
-    Train Deep CFR for Coyote game
+    DQN学習によるモデルの訓練
 
     Args:
-        iterations: Number of training iterations
-        num_players: Number of players in the game
+        iterations: イテレータの数
+        num_players:ゲームの最大人数
 
     Returns:
-        list: Trained strategy networks for each player
+        list:戦略ネットワーク
     """
     num_players = 6
-
-    # Create reservoir buffers for each player
-    advantage_buffer = ReservoirBuffer()
-    strategy_buffer = ReservoirBuffer()
     try:
 
       # 状態をエンコード
       encoded_state = encode_state(current_state)
-      logging.info(f"Encoded state shape: {encoded_state.shape}")
-      logging.info(f"First 10 values: {encoded_state[:10]}")
+    #   logging.info(f"Encoded state shape: {encoded_state.shape}")
+    #   logging.info(f"First 10 values: {encoded_state[:10]}")
 
     except Exception as e:
         print(f"Error processing game data: {e}")
@@ -43,7 +39,7 @@ def train_deepcfr_for_coyote(self,iterations=10,current_state=None):
             self,
             self.advantage_net,
             advantages,
-            advantage_buffer
+            self.advantage_buffer
         )
 
 
@@ -54,7 +50,7 @@ def train_deepcfr_for_coyote(self,iterations=10,current_state=None):
                 self,
                 self.strategy_net,
                 self.advantage_net,
-                strategy_buffer,
+                self.strategy_buffer,
                 advantages
             )
 

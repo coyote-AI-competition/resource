@@ -10,6 +10,7 @@ from .Back.make_decision import make_decision
 from .Back.StrategyNetwork import StrategyNetwork
 from .Back.create_advantage_network import create_advantage_network
 from .Back.CFRTrainingEvaluator import evaluate_cfr_training,visualize_model_prediction
+from .Back.reservoirbuffer import ReservoirBuffer
 from datetime import datetime
 import random
 import logging
@@ -33,8 +34,13 @@ class SampleClient(Client):
         self.Is_coyoted = None # プレイヤーがコヨーテかどうかのフラグ
         self.trajectory_value = 0 #ラウンドの価値を保存する変数
         self.prev_others_life = [] # 直前の他プレイヤーのライフを保存する変数
-       
-       
+        self.advantage_buffer = ReservoirBuffer()
+        self.strategy_buffer = ReservoirBuffer()
+        batch_size = 32
+        # policy_targetsの初期化（32×141の確率分布）
+        raw_targets = np.random.random((batch_size, 141))  # 32サンプル分のランダムな正の値を生成
+        # 確率分布に正規化（各行の合計を1にする）
+        self.policy_targets = raw_targets / raw_targets.sum(axis=1, keepdims=True)
         
         self.train_counter = 0
         self.train_frequency = 10  

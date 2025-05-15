@@ -1,6 +1,7 @@
 from .not_websocket_client import Client
 from .Back.make_decision import make_decision
 from .Back.StrategyNetwork import StrategyNetwork
+from .Back.reservoirbuffer import ReservoirBuffer
 import random
 import logging
 import coyote
@@ -96,7 +97,9 @@ class SampleClient(Client):
         Path("models").mkdir(exist_ok=True)
         Path("save_picture").mkdir(exist_ok=True)
         self.strategy_net = StrategyNetwork(self.expect_sum,self.input_size)  # 必要な引数を指定
-
+        self.policy_targets = np.random.random((self.input_size, 141))  # ランダムな正の値を生成
+        self.advantage_buffer = ReservoirBuffer()
+        self.strategy_buffer = ReservoirBuffer()
         
         # モデルのロード
         try:

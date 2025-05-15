@@ -34,7 +34,7 @@ class StrategyNetwork:
         ])
         
         model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),#学習率
             loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True), #交差エントロピー損失関数
             metrics=['accuracy'] #正解率
         )
@@ -113,9 +113,7 @@ class StrategyNetwork:
                 action_probs[i] = float(probabilities[i])
         
         return action_probs
-            
-  
-            
+                 
     '''
     例
     action_probs = {

@@ -2,13 +2,12 @@ import numpy as np
 import logging
 def update_advantage_network(self,advantage_net, advantage, buffer, batch_size=32, epochs=10):
     """
-    Update the advantage network for a player
+    アドバンテージネットワークの更新
     
     Args:
-        advantage_net: Player's advantage network
-        advantages: Dictionary of advantages for different info sets
-        player: Player index
-        buffer: Reservoir buffer for storing training data
+        advantage_net: プレイヤーのアドバンテージネットワーク
+        advantages: 辞書形式の選択した行動に対する価値
+        buffer: これまでの辞書形式の選択した行動に対する価値
         batch_size: Training batch size
         epochs: Number of training epochs
     """
@@ -27,9 +26,9 @@ def update_advantage_network(self,advantage_net, advantage, buffer, batch_size=3
     #len(samples)はターン数に相当する
     logging.info(f"十分なbufferがある: {len(buffer.buffer)}")
     samples = buffer.sample(batch_size)
-    states = np.array([s[0] for s in samples])
-    targets = np.array([s[1] for s in samples])
-    #advantages = np.array([s[2] for s in samples])
+    states = np.array([s[0] for s in samples])#encoded_state
+    targets = np.array([s[1] for s in samples])#advantage_vector
+ 
 
     
     # 状態テンソルの形状を(None, 318)に調整
