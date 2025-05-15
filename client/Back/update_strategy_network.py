@@ -31,9 +31,9 @@ def update_strategy_network(self,strategy_net, advantage_net, strategy_buffer, a
             strategy_buffer.add((encoded_state, policy))
 
     if len(strategy_buffer.buffer) < batch_size:
-        return  # Not enough data
+        return  #十分なデータがない
     
-    # Sample states from buffer
+   
     samples = strategy_buffer.sample(batch_size)
     states = np.array([s[0] for s in samples])
     self.policy_targets = np.array([s[1] for s in samples])
@@ -42,7 +42,7 @@ def update_strategy_network(self,strategy_net, advantage_net, strategy_buffer, a
     if len(states.shape) == 3:
         states = states.reshape(-1, self.input_size)  # (32, 1, 318) → (32, 318)
     
-    # Train strategy network to predict this policy
+    # ストラテジーネットワークを訓練
     strategy_net.model.fit(
         states, 
         self.policy_targets,

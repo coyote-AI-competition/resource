@@ -9,7 +9,7 @@ from .Back.train_deepcfr_for_coyote import train_deepcfr_for_coyote
 from .Back.make_decision import make_decision
 from .Back.StrategyNetwork import StrategyNetwork
 from .Back.create_advantage_network import create_advantage_network
-from .Back.CFRTrainingEvaluator import evaluate_cfr_training,visualize_model_prediction
+from .Back.CFRTrainingEvaluator import  visualize_model_prediction, CFRTrainingEvaluator
 from .Back.reservoirbuffer import ReservoirBuffer
 from datetime import datetime
 import random
@@ -46,7 +46,9 @@ class SampleClient(Client):
         self.train_frequency = 10  
         self.training_in_progress = False
         self.game_state = deque(maxlen=1000)
-       
+        
+        # ゲームメトリクス分析用のインスタンス
+        self.metrics_evaluator = CFRTrainingEvaluator(self.strategy_net, self.advantage_net)
 
     def _load_model(self):
         # ログの設定
@@ -147,13 +149,17 @@ class SampleClient(Client):
             "Is_coyoted": self.Is_coyoted,
         }
         self.game_state.append(state.copy())
-        evaluator = evaluate_cfr_training(self, self.game_state)
-        prediction_fig = visualize_model_prediction(evaluator.strategy_net, self.game_state)
+        self.metrics_evaluator.evaluate_cfr_training(self.strategy_buffer, self.game_state)
+        prediction_fig = visualize_model_prediction(self.strategy_net, self.game_state)
        
         current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
         # ファイル名に日付を追加
         file_name = f"save_picture/model_predictions_{current_time}.png"        # Save the figure
         prediction_fig.savefig(file_name)
+        
+        # 宣言回数ベースのメトリクス分析
+        self.analyze_game_metrics()
+        
         self.strategy_net = train_deepcfr_for_coyote(self, current_state = state)
         self._save_models()
 
@@ -161,4 +167,40 @@ class SampleClient(Client):
         END = '\033[0m'
         logging.info("select_action: %s" ,select_action)
         return  select_action
+    
+    def analyze_game_metrics(self):
+        """ゲームメトリクスを分析し、結果を可視化する"""
+        # 必要なディレクトリが存在することを確認
+        output_path = "prediction_visualizations"
+        Path(output_path).mkdir(exist_ok=True)
+        
+        # ゲーム状態が十分に溜まってから分析する
+        if len(self.game_state) < 5:
+            logging.info("ゲーム状態が不十分なため、メトリクス分析をスキップします。")
+            return
+        
+        # 現在のタイムスタンプを取得（ファイル名用）
+        current_time = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        
+        try:
+            # ゲームメトリクスを分析
+            self.metrics_evaluator.analyze_game_logs(list(self.game_state), output_path)
+            
+            # 特定のメトリクスのみを更新したファイル名で保存
+            loss_file = self.metrics_evaluator.plot_loss_function_by_declaration(output_path)
+            transition_file = self.metrics_evaluator.plot_declaration_transition_by_declaration(output_path)
+            
+            # タイムスタンプ付きのファイル名でも保存
+            if transition_file:  # ファイルが正常に作成された場合のみ
+                # ファイル名とパスを分離
+                base_path = os.path.dirname(transition_file)
+                # タイムスタンプ付きの新しいファイル名
+                timestamp_file = os.path.join(base_path, f"prediction_{current_time}.png")
+                # 内容をコピー
+                import shutil
+                shutil.copy2(transition_file, timestamp_file)
+                logging.info(f"タイムスタンプ付き分析結果を保存しました: {timestamp_file}")
+            
+        except Exception as e:
+            logging.error(f"メトリクス分析中にエラーが発生しました: {e}")
       

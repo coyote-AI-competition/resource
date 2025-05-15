@@ -6,6 +6,7 @@ import random
 import os
 import json
 from tqdm import tqdm
+import glob
 
 # 既存のコードからインポート
 from .encode_state import encode_state
@@ -20,6 +21,7 @@ class CFRTrainingEvaluator:
         self.strategy_net = strategy_net
         self.advantage_net = advantage_net
         self.current_state = []  # 現在の状態を保持
+        self.turn_count = 0
         self.history = {
             'advantage_loss': [],
             'strategy_accuracy': [],
@@ -27,7 +29,10 @@ class CFRTrainingEvaluator:
             'epoch': [],
             'declarations': [],  # 宣言値の履歴
             'actual_sums': [],  # 実際の合計値の履歴
-            'over_declaration_ratios': []  # 超過宣言の割合
+            'over_declaration_ratios': [],  # 超過宣言の割合
+            'declaration_count': [],  # 宣言回数
+            'loss_values': [],  # 損失関数値
+            'over_declaration_ratio': []  # 宣言値が合計値を超えた割合
         }
     
     def log_metrics(self, epoch, advantage_loss=None, strategy_accuracy=None, 
@@ -216,45 +221,224 @@ class CFRTrainingEvaluator:
         ax.grid(True)
         
         return fig, overestimation_rate
-
-# メイン実行関数
-def evaluate_cfr_training(self,current_state,iterations=50):
-    """CFR学習の評価を実行"""
-    # ネットワークの作成
-    input_size = self.input_size
-    output_size = 141
-    advantage_net = self.advantage_net
-    strategy_net = self.strategy_net
     
-    # 評価用のインスタンス
-    evaluator = CFRTrainingEvaluator(strategy_net, advantage_net)
 
-    # 学習と評価のループ
-    for i in tqdm(range(iterations)):
-        # サンプル状態からのバッチ作成
+
+    
+    def process_game(self, game_states):
+                
+        state = game_states[-1]
+            
+        action = state["selectaction"]
+        actual_sum = state["sum"]
+        
+        # コヨーテコール(-1)はスキップ
+        if action != -1:
+            
+            
+            self.history['declarations'].append(action)
+            self.history['actual_sums'].append(actual_sum)
+            self.history['declaration_count'].append(self.turn_count)
+            
+            # 損失関数を計算（二乗誤差）
+            loss = (action - actual_sum) ** 2
+            self.history['loss_values'].append(loss)
+            
+            # 宣言値が合計値を超えた割合を計算
+            over_ratio = (action - actual_sum) / actual_sum if actual_sum > 0 else 0
+            self.history['over_declaration_ratio'].append(over_ratio)
+        
+        return len(game_states) > 0
+    
+    def plot_loss_function_by_declaration(self, output_path="./save_picture"):
+        """宣言回数に対する損失関数の推移をプロット"""
+        if not self.history['declaration_count'] or not self.history['loss_values']:
+            print("損失関数をプロットするデータがありません。")
+            return None
+            
+        plt.figure(figsize=(10, 6))
+        plt.plot(self.history['declaration_count'], self.history['loss_values'], 'o-')
+        plt.xlabel('select_count')
+        plt.ylabel('loss_value')
+        plt.title('Transition of loss function')
+        plt.grid(True)
+        
+        # 出力ディレクトリが存在しない場合は作成
+        os.makedirs(output_path, exist_ok=True)
+        output_file = os.path.join(output_path, 'loss_function_by_declaration.png')
+        plt.savefig(output_file)
+        plt.close()
+        
+        return output_file
+    
+    def plot_over_declaration_ratio_by_declaration(self, output_path="./save_picture"):
+        """宣言回数に対する場の合計を超えた割合の推移をプロット"""
+        if not self.history['declaration_count'] or not self.history['over_declaration_ratio']:
+            print("場の合計を超えた割合をプロットするデータがありません。")
+            return None
+            
+        plt.figure(figsize=(10, 6))
+        plt.plot(self.history['declaration_count'], self.history['over_declaration_ratio'], 'o-')
+        plt.axhline(y=0, color='r', linestyle='--')
+        plt.xlabel('select_count')
+        plt.ylabel('over_declaration_ratio')
+        plt.title('Transition of over-declaration ratio')
+        plt.grid(True)
+        
+        # 出力ディレクトリが存在しない場合は作成
+        os.makedirs(output_path, exist_ok=True)
+        output_file = os.path.join(output_path, 'over_declaration_ratio_by_declaration.png')
+        plt.savefig(output_file)
+        plt.close()
+        
+        return output_file
+    
+    def plot_declaration_transition_by_declaration(self, output_path="./save_picture"):
+        """宣言回数に対する宣言値と実際の合計値の推移をプロット"""
+        if not self.history['declaration_count'] or not self.history['declarations'] or not self.history['actual_sums']:
+            print("宣言値の推移をプロットするデータがありません。")
+            return None
+            
+        # 宣言回数でソート
+        sorted_indices = np.argsort(self.history['declaration_count'])
+        declarations = [self.history['declarations'][i] for i in sorted_indices]
+        sums = [self.history['actual_sums'][i] for i in sorted_indices]
+        counts = [self.history['declaration_count'][i] for i in sorted_indices]
+        
+        plt.figure(figsize=(10, 6))
+        plt.plot(counts, declarations, 'o-', label='select_action')
+        plt.plot(counts, sums, 'o-', label='actual_sum')
+        plt.xlabel('select_count')
+        plt.ylabel('value')
+        plt.title('Transition of select_count and value')
+        plt.legend()
+        plt.grid(True)
+        
+        # 出力ディレクトリが存在しない場合は作成
+        os.makedirs(output_path, exist_ok=True)
+        output_file = os.path.join(output_path, 'declaration_transition_by_declaration.png')
+        plt.savefig(output_file)
+        plt.close()
+        
+        return output_file
+    
+    def plot_all_metrics_by_declaration(self, output_path="./save_picture"):
+        self.turn_count += 1
+        """宣言回数に対するすべての指標を1つの図にプロット"""
+        if not self.history['declaration_count']:
+            print("プロットするデータがありません。")
+            return None
+            
+        fig, axes = plt.subplots(3, 1, figsize=(12, 15))
+        
+        # 宣言回数でソート
+        sorted_indices = np.argsort(self.history['declaration_count'])
+        declarations = [self.history['declarations'][i] for i in sorted_indices if i < len(self.history['declarations'])]
+        sums = [self.history['actual_sums'][i] for i in sorted_indices if i < len(self.history['actual_sums'])]
+        losses = [self.history['loss_values'][i] for i in sorted_indices if i < len(self.history['loss_values'])]
+        over_ratios = [self.history['over_declaration_ratio'][i] for i in sorted_indices if i < len(self.history['over_declaration_ratio'])]
+        counts = [self.history['declaration_count'][i] for i in sorted_indices]
+        
+        # 1. 損失関数
+        if losses:
+            axes[0].plot(counts[:len(losses)], losses, 'o-')
+            axes[0].set_xlabel('select_count')
+            axes[0].set_ylabel('loss_value')
+            axes[0].set_title('Transition of loss function')
+            axes[0].grid(True)
+        
+        # 2. 超過宣言割合
+        if over_ratios:
+            axes[1].plot(counts[:len(over_ratios)], over_ratios, 'o-')
+            axes[1].axhline(y=0, color='r', linestyle='--')
+            axes[1].set_xlabel('select_count')
+            axes[1].set_ylabel('over_declaration_ratio')
+            axes[1].set_title('Transition of over-declaration ratio')
+            axes[1].grid(True)
+        
+        # 3. 宣言値と実際の合計値
+        if declarations and sums:
+            axes[2].plot(counts[:len(declarations)], declarations, 'o-', label='declarations')
+            axes[2].plot(counts[:len(sums)], sums, 'o-', label='actual_sums')
+            axes[2].set_xlabel('select_count')
+            axes[2].set_ylabel('value')
+            axes[2].set_title('Transition of select_count and value')
+            axes[2].legend()
+            axes[2].grid(True)
+        
+        plt.tight_layout()
+        
+        # 出力ディレクトリが存在しない場合は作成
+        os.makedirs(output_path, exist_ok=True)
+        output_file = os.path.join(output_path, 'all_metrics_by_declaration.png')
+        plt.savefig(output_file)
+        plt.close()
+        
+        return output_file
+    
+    def analyze_game_logs(self, game_states, output_path="./save_picture"):
+        """ゲームログを分析し、結果を可視化する"""
+        # ログを処理してメトリクスを抽出
+        has_data = self.process_game(game_states)
+        
+        if not has_data:
+            print("分析するデータがありません。")
+            return
+        
+        # 個別の指標をプロット
+        loss_file = self.plot_loss_function_by_declaration(output_path)
+        over_ratio_file = self.plot_over_declaration_ratio_by_declaration(output_path)
+        transition_file = self.plot_declaration_transition_by_declaration(output_path)
+        
+        # すべての指標を1つの図にプロット
+        all_metrics_file = self.plot_all_metrics_by_declaration(output_path)
+        
+        output_files = [f for f in [loss_file, over_ratio_file, transition_file, all_metrics_file] if f]
+        
+        if output_files:
+            print(f"以下のファイルに可視化結果が保存されました:")
+            for f in output_files:
+                print(f"- {f}")
+        else:
+            print("可視化に失敗しました。データが不足している可能性があります。")
+
+
+
+
+
+    # メイン実行関数
+    def evaluate_cfr_training(self,strategy_buffer,current_state,iterations=50):
+        """CFR学習の評価を実行"""
+        # ネットワークの作成
+        output_size = 141
+        advantage_net = self.advantage_net
+        strategy_net = self.strategy_net
+
         batch_size = 32
-        batch_indices = np.random.choice(len(current_state), batch_size)
-        batch_states = [current_state[idx] for idx in batch_indices]
+        if len(strategy_buffer.buffer) < batch_size:
+            return
+
+        samples = strategy_buffer.sample(batch_size)
+        states = np.array([s[0] for s in samples])
+        self.policy_targets = np.array([s[1] for s in samples])
         
-        # エンコード
-        encoded_states = np.array([encode_state(state) for state in batch_states])
-        
-        # 形状を(None, 318)に調整
-        if len(encoded_states.shape) == 3:
-            encoded_states = encoded_states.reshape(-1, self.input_size)  # (32, 1, 318) → (32, 318)
+        # 状態テンソルの形状を(None, 318)に調整
+            # 状態テンソルの形状を(None, 318)に調整
+        if len(states.shape) == 3:
+            states = states.reshape(-1, 317)  # (32, 1, 318) → (32, 318)
         
         # アドバンテージネットワークの更新シミュレーション
         advantage_loss = advantage_net.evaluate(
-            encoded_states, 
+            states, 
             self.policy_targets,  
             verbose=0
         )[0]
         
         # 戦略ネットワークの精度計算
         correct_predictions = 0
-        total_predictions = len(batch_states)
+        total_predictions = len(samples)
         
-        for state, encoded_state in zip(batch_states, encoded_states):
+        for state, encoded_state in zip(current_state, states):
             # 実際に選択されたアクション
             actual_action = state['selectaction']
             
@@ -272,28 +456,29 @@ def evaluate_cfr_training(self,current_state,iterations=50):
         strategy_accuracy = correct_predictions / total_predictions if total_predictions > 0 else 0
         
         # 宣言値と実際の合計の比率を評価
-        declaration_ratio, _, overestimation_rate = evaluator.evaluate_declaration_accuracy(current_state)
+        declaration_ratio, _, overestimation_rate = self.evaluate_declaration_accuracy(current_state)
         
         # 指標の記録
-        evaluator.log_metrics(
-            epoch=i,
+        self.log_metrics(
+            epoch=self.turn_count,
             advantage_loss=advantage_loss,
             strategy_accuracy=strategy_accuracy,
             declaration_vs_sum_ratio=declaration_ratio,
         )
-    
-    # 結果の可視化
-    metrics_fig = evaluator.plot_all_metrics()
-    save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'save_picture')
-    os.makedirs(save_dir, exist_ok=True)
-    metrics_fig.savefig(os.path.join(save_dir, 'cfr_training_metrics.png'))
-    
-    # 宣言値の分布を可視化
-    dist_fig, overestimation_rate = evaluator.plot_declaration_distribution(current_state)
-    dist_fig.savefig(os.path.join(save_dir, 'declaration_distribution.png'))
-    
-    print(f"Training evaluation complete. Final overestimation rate: {overestimation_rate:.2f}")
-    return evaluator
+        print(f"advantage_loss: {advantage_loss}")
+        
+        # 結果の可視化
+        metrics_fig = self.plot_all_metrics()
+        save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'save_picture')
+        os.makedirs(save_dir, exist_ok=True)
+        metrics_fig.savefig(os.path.join(save_dir, 'cfr_training_metrics.png'))
+        
+        # 宣言値の分布を可視化
+        dist_fig, overestimation_rate = self.plot_declaration_distribution(current_state)
+        dist_fig.savefig(os.path.join(save_dir, 'declaration_distribution.png'))
+        
+        print(f"Training evaluation complete. Final overestimation rate: {overestimation_rate:.2f}")
+
 
 # モデルの推論パフォーマンスを視覚化する関数
 def visualize_model_prediction(strategy_net, test_states, num_samples=10):
