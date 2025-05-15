@@ -60,10 +60,11 @@ class PlayerN(Client):
         current_declare = self.get_current_declare(actions)
         # 現在の勝率を計算する
         win_ratio = current_win_ratio(action_space,current_declare)
+        E = int(expect_value(action_space))
+        
         # 自分が次の行動によりwinratioが変化するかを求める
         action = 1
         next_win_ratio: float | Literal[0] | Literal[1] = current_win_ratio(action_space,current_declare+action)
-        
         if win_ratio > 0 and win_ratio < 0.1:
             # もしもかなり勝率が低い場合にはコヨーテをする
             return -1
@@ -105,7 +106,7 @@ class PlayerN(Client):
         if len(actions) == 1:
             return 139
         elif len(actions) >= 2:
-            return actions[1]
+            return actions[1]-1
         else:
             return 0
     
