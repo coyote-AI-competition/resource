@@ -5,3 +5,4 @@ tqdm
 websocket-client
 coyote-AI-competition
 ipykernel
+matplotlib

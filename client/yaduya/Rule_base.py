@@ -2,6 +2,8 @@ from ..not_websocket_client import Client
 import random
 
 
+
+
 class ConstClient(Client):
     def __init__(self, player_name="RandomAI", is_ai=True):
         super().__init__(player_name=player_name, is_ai=is_ai)
