@@ -144,36 +144,57 @@ class PlayerN(Client):
         action = self.agent.get_action(state)
         if done:
             if len(log) == 0:
-                self.agent.add_experience(
-                    self.previous_state,
-                    action,
-                    -1,
-                    next_state,
-                    done,
-                    is_next=True
-                )
+                if self.previous_state == None:
+                    self.agent.add_experience(
+                        state,
+                        action,
+                        -1,
+                        next_state,
+                        done,
+                        is_next=True
+                    )
+                else:
+                    self.agent.add_experience(
+                        self.previous_state,
+                        action,
+                        -1,
+                        next_state,
+                        done,
+                        is_next=True
+                    )
                 self.previous_state = None
             else:
-                self.agent.add_experience(
-                    self.previous_state,
-                    action,
-                    1,
-                    next_state,
-                    done,
-                    is_next=True
-                )
+                if self.previous_state == None:
+                    self.agent.add_experience(
+                        state,
+                        action,
+                        1,
+                        next_state,
+                        done,
+                        is_next=True
+                    )
+                else:
+                    self.agent.add_experience(
+                        self.previous_state,
+                        action,
+                        1,
+                        next_state,
+                        done,
+                        is_next=True
+                    )
                 self.previous_state = None
         else:
             if self.previous_state == None:
                 self.previous_state = state
                 self.agent.add_experience(
-                    self.previous_state,
+                    state,
                     action,
                     1,
                     next_state,
                     done,
                     is_next=False
                 )
+                self.previous_state = state
             else:
             # もしもすでに経験がある場合には、次の状態を更新する。
                 if self.previous_state == state:
@@ -190,9 +211,13 @@ class PlayerN(Client):
             self.previous_state = state
         
         self.agent.update()
-        self.count += 1 
+        self.agent.set_epsilon()
+        self.count += 1
+        print('count', self.count)
         if self.count % 100 == 0:
             self.agent.sync_net()
+            print('sync!')
+            self.agent.save_model()
         
         if action == 0 :
             return -1 
@@ -226,24 +251,12 @@ class PlayerN(Client):
         return self.coyote
     
     def AI_player_action(self,others_info, sum, log, actions, round_num):
-        # カスタムロジックを実装
-        print('========================')
-        print('others_info', others_info)
-        print('sum', sum)
-        print('log', log)
-        print('actions', actions)
-        print('round_num', round_num)
-        print('========================')
-        
-        
-        
         action = self.learning_step(
             others_info,
             actions,
             round_num,
             log
         )
-        
         return action
 
 
