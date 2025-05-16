@@ -77,9 +77,6 @@ class ConstClient(Client):
         else:
             caluclate_sum = sum(number_cards)
         return caluclate_sum
-    
-    
-    
 
     def AI_player_action(self,others_info, sum, log, actions, round_num):
         if self.round_number != round_num:

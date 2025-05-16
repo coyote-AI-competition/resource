@@ -2,6 +2,8 @@ from typing import Literal
 from .not_websocket_client import Client
 import random
 from .yaduya.logic import *  # または必要な関数/クラス名を指定
+from .yaduya.replay import ReplayBuffer
+from .yaduya.Reinforce import Agent
 # N = Player 
 # 初めの場合には、Estimate-N を行い、そのほかの場合には、+1をする戦法
 class PlayerN(Client):
@@ -13,6 +15,11 @@ class PlayerN(Client):
         # 100 -> x2, 101 -> max0, 102 -> 0 ,103 -> ?
         self.shuffle = False
         self.estimate_now_decks_card = self.all_cards
+        self.agent = Agent(state_size=4, action_size=2)
+        self.previous_state = None
+        self.count = 0 
+        self.coyote = False
+        self.round_now = 0
         
     def players_card_list(self, others_info):
         """PLAYERのカードリストを取得する
@@ -96,7 +103,103 @@ class PlayerN(Client):
             # それ以外の場合には、+1戦略をとる
             print('==============明かなバグです====================')
             return current_declare + 1
+    
+    
+    
+    def learning_step(self,others_info,actions,round,log):
+        """
+        学習するためのものを出力するためのメソッド
+        """
+    
+        # メンバーの数の取得
+        N = len(others_info) + 1
+        # 認識できるカード情報を取得する
+        observation_cards = self.players_card_list(others_info)
+        estimate_now_deck = self.estimate_now_deck(observation_cards)
+        # このカードの中で動けるカードを推定する
+        action_space=calculate_sum_with_deck_state(observation_cards,estimate_now_deck)
+        current_declare = self.get_current_declare(actions)
+        # 現在の勝率を計算する
+        win_ratio = current_win_ratio(action_space,current_declare)
+        E = int(expect_value(action_space))
         
+        state = [
+            win_ratio,
+            current_declare,
+            E,
+            N
+        ]
+        
+        
+        next_win_ratio = current_win_ratio(action_space,current_declare+N)
+        next_state = [
+            next_win_ratio,
+            current_declare+N,
+            E,
+            N
+        ]
+        
+        done = self.round_estimate(round)
+        
+        action = self.agent.get_action(state)
+        if done:
+            if len(log) == 0:
+                self.agent.add_experience(
+                    self.previous_state,
+                    action,
+                    -1,
+                    next_state,
+                    done,
+                    is_next=True
+                )
+                self.previous_state = None
+            else:
+                self.agent.add_experience(
+                    self.previous_state,
+                    action,
+                    1,
+                    next_state,
+                    done,
+                    is_next=True
+                )
+                self.previous_state = None
+        else:
+            if self.previous_state == None:
+                self.previous_state = state
+                self.agent.add_experience(
+                    self.previous_state,
+                    action,
+                    1,
+                    next_state,
+                    done,
+                    is_next=False
+                )
+            else:
+            # もしもすでに経験がある場合には、次の状態を更新する。
+                if self.previous_state == state:
+                    pass 
+                else:
+                    self.agent.add_experience(
+                        self.previous_state,
+                        action,
+                        1,
+                        next_state,
+                        done,
+                        is_next=False
+                    )
+            self.previous_state = state
+        
+        self.agent.update()
+        self.count += 1 
+        if self.count % 100 == 0:
+            self.agent.sync_net()
+        
+        if action == 0 :
+            return -1 
+        else:
+            return current_declare + action
+    
+    
     def get_current_declare(self,actions):
         """現在の宣言を取得する
 
@@ -109,10 +212,38 @@ class PlayerN(Client):
             return actions[1]-1
         else:
             return 0
+        
+    def round_estimate(self,round_num):
+        if round_num == 1:
+            self.shuffle = True
+            self.round_now = round_num
+        else:
+            if self.round_now != round_num:
+                self.round_now = round_num
+                self.coyote = True
+            else:
+                self.coyote = False
+        return self.coyote
     
     def AI_player_action(self,others_info, sum, log, actions, round_num):
         # カスタムロジックを実装
-        action = self.action_estimate(others_info,actions)
+        print('========================')
+        print('others_info', others_info)
+        print('sum', sum)
+        print('log', log)
+        print('actions', actions)
+        print('round_num', round_num)
+        print('========================')
+        
+        
+        
+        action = self.learning_step(
+            others_info,
+            actions,
+            round_num,
+            log
+        )
+        
         return action
 
 
