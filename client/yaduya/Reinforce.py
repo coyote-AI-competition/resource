@@ -111,5 +111,5 @@ class Agent:
     def set_epsilon(self) -> None:
         self.epsilon -= self.epsilon_decay
         
-    def save_model(self) -> None:
-        torch.save(self.original_qnet.state_dict(), 'model.pth')
+    def save_model(self,model_name) -> None:
+        torch.save(self.original_qnet.state_dict(), f'model_{model_name}.pth')

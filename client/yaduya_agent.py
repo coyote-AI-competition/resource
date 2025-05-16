@@ -217,7 +217,7 @@ class PlayerN(Client):
         if self.count % 100 == 0:
             self.agent.sync_net()
             print('sync!')
-            self.agent.save_model()
+            self.agent.save_model(self.player_name)
         
         if action == 0 :
             return -1 
