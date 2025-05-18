@@ -4,9 +4,16 @@ import random
 from .yaduya.logic import *  # または必要な関数/クラス名を指定
 from .yaduya.replay import ReplayBuffer
 from .yaduya.Reinforce import Agent
+import logging
+
+# ログの設定
+logging.basicConfig(
+  filename='example.log',   # ログファイルの名前
+  level=logging.DEBUG,      # ログレベル（DEBUG以上のレベルが記録される）
+)
 # N = Player 
 # 初めの場合には、Estimate-N を行い、そのほかの場合には、+1をする戦法
-class PlayerN(Client):
+class PlayerReinforce(Client):
     def __init__(self, player_name="player1", is_ai=False):
         super().__init__(player_name, is_ai)
         self.all_cards =[100, 101, 102, 103, -10, -5, -5, 0, 0, 0, 
@@ -19,7 +26,9 @@ class PlayerN(Client):
         self.previous_state = None
         self.count = 0 
         self.coyote = False
-        self.round_now = 0
+        self.previous_round = 0
+        self.done = False
+        self.previous_action = 1
         
     def players_card_list(self, others_info):
         """PLAYERのカードリストを取得する
@@ -56,9 +65,8 @@ class PlayerN(Client):
         1. 自分のカードを取得する
         2. 行動可能なアクションを全て取得する。
         3. 現在の勝率を計算する
+        4. 勝てなければ-1をして、勝てる場合には+1をする。
         """
-        # メンバーの数の取得
-        N = len(others_info) + 1
         # 認識できるカード情報を取得する
         observation_cards = self.players_card_list(others_info)
         estimate_now_deck = self.estimate_now_deck(observation_cards)
@@ -72,36 +80,11 @@ class PlayerN(Client):
         # 自分が次の行動によりwinratioが変化するかを求める
         action = 1
         next_win_ratio: float | Literal[0] | Literal[1] = current_win_ratio(action_space,current_declare+action)
-        if win_ratio > 0 and win_ratio < 0.1:
+        if   0 == win_ratio :
             # もしもかなり勝率が低い場合にはコヨーテをする
             return -1
-        elif next_win_ratio == win_ratio:
-            # この場合には、+1戦略をとる
-            return current_declare + 1
-        elif next_win_ratio > win_ratio:
-            # この場合には、+1戦略をとる
-            print('==============明かなバグです====================')
-            return current_declare + 1
-        elif next_win_ratio < win_ratio:
-            # この場合には、戦略を+N戦法として次の自分のターンの時の状況を考える
-            next_trun_win_ratio = current_win_ratio(action_space,current_declare+N)
-            if next_trun_win_ratio == next_win_ratio:
-                # この場合には、+1戦略をとる
-                return current_declare + 1
-            elif next_trun_win_ratio > next_win_ratio:
-                print('==============明かなバグです====================')
-                return current_declare + 1
-            else :
-                if next_trun_win_ratio < 0.05:
-                    # もしもかなり勝率が低い場合にはコヨーテをする
-                    return -1
-                    
-                else:
-                    # それ以外の場合には、+1戦略をとる
-                    return current_declare + 1
         else:
-            # それ以外の場合には、+1戦略をとる
-            print('==============明かなバグです====================')
+            # それ以外の時には、+1戦略を行う
             return current_declare + 1
     
     
@@ -139,59 +122,72 @@ class PlayerN(Client):
             N
         ]
         
-        done = self.round_estimate(round)
-        
+        self.done = self.round_estimate(round)
         action = self.agent.get_action(state)
-        if done:
+        
+        if self.done:
             if len(log) == 0:
                 if self.previous_state == None:
-                    self.agent.add_experience(
+                    reward = -1
+                self.agent.add_experience(
                         state,
-                        action,
-                        -1,
+                        self.previous_action,
+                        reward,
                         next_state,
-                        done,
+                        self.done,
                         is_next=True
                     )
                 else:
+                    reward = -1
                     self.agent.add_experience(
                         self.previous_state,
                         action,
-                        -1,
+                        reward,
                         next_state,
-                        done,
+                        self.done,
                         is_next=True
                     )
+                
+                logging.debug(f"log is 0 count: {self.count}, epsilon: {self.agent.epsilon}, state: {state}, action: {action}, reward: {reward}, next_state: {next_state}, done: {self.done}")
+                logging.debug(f"action: {action}")
                 self.previous_state = None
+                self.done = False
             else:
                 if self.previous_state == None:
+                    reward = 1
                     self.agent.add_experience(
                         state,
                         action,
-                        1,
+                        reward,
                         next_state,
-                        done,
+                        self.done,
                         is_next=True
                     )
                 else:
+                    reward = 1
                     self.agent.add_experience(
                         self.previous_state,
                         action,
-                        1,
+                        reward,
                         next_state,
-                        done,
+                        self.done,
                         is_next=True
                     )
+                logging.debug(f"coyo-te sucess!!: {self.count}, epsilon: {self.agent.epsilon}, state: {state}, action: {action}, reward: {reward}, next_state: {next_state}, done: {self.done}")
+                logging.debug(f"action: {action}")
                 self.previous_state = None
+                self.done = False
+                
         else:
             if self.previous_state == None:
                 self.previous_state = state
+                reward = 1
                 self.agent.add_experience(
                     state,
                     action,
-                    1,
+                    reward,
                     next_state,
-                    done,
+                    self.done,
                     is_next=False
                 )
                 self.previous_state = state
@@ -200,21 +196,28 @@ class PlayerN(Client):
                 if self.previous_state == state:
                     pass 
                 else:
+                    reward = 1
                     self.agent.add_experience(
                         self.previous_state,
                         action,
-                        1,
+                        reward,
                         next_state,
-                        done,
+                        self.done,
                         is_next=False
                     )
+                logging.debug(f"count: {self.count}, epsilon: {self.agent.epsilon}, state: {state}, action: {action}, reward: {reward}, next_state: {next_state}, done: {self.done}")
+                logging.debug(f"action: {action}")
             self.previous_state = state
+        self.previous_action = action
         
         self.agent.update()
-        self.agent.set_epsilon()
+        if self.agent.epsilon < self.agent.epsilon_end:
+            pass
+        else:
+            self.agent.set_epsilon()
         self.count += 1
         print('count', self.count)
-        if self.count % 100 == 0:
+        if self.count % 1000 == 0:
             self.agent.sync_net()
             print('sync!')
             self.agent.save_model(self.player_name)
@@ -241,14 +244,15 @@ class PlayerN(Client):
     def round_estimate(self,round_num):
         if round_num == 1:
             self.shuffle = True
-            self.round_now = round_num
+            self.privious_round = round_num
+            coyote = False
         else:
-            if self.round_now != round_num:
-                self.round_now = round_num
-                self.coyote = True
+            if self.previous_round != round_num:
+                self.previous_round= round_num
+                coyote = True
             else:
-                self.coyote = False
-        return self.coyote
+                coyote = False
+        return coyote
     
     def AI_player_action(self,others_info, sum, log, actions, round_num):
         action = self.learning_step(
@@ -257,11 +261,20 @@ class PlayerN(Client):
             round_num,
             log
         )
+        print("round",round_num)
         return action
 
 
 
-
+class PlayerLogi(PlayerReinforce):
+    def __init__(self, player_name="player1", is_ai=False):
+        super().__init__(player_name, is_ai)
+    def AI_player_action(self,others_info, sum, log, actions, round_num):
+        action = self.action_estimate(
+            others_info,
+            actions
+        )
+        return action
 
 
 

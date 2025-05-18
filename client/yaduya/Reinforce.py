@@ -7,7 +7,7 @@ import torch.nn as nn
 from typing import Union
 import copy
 from .replay import ReplayBuffer
-TOTAL_TIMESTEPS = 50 # 総ステップ数
+TOTAL_TIMESTEPS = 500 # 総ステップ数
 MAX_STEP = 500 # 1エピソードでの最大ステップ数
 BUFFER_SIZE = 1000000 #バッファサイズ
 BATCH_SIZE = 32 # バッチサイズ
@@ -18,6 +18,8 @@ ACTION_SIZE = 2 # 行動数
 TARGET_UPDATE_STEPS = 1000 # ターゲットネットワークの更新ステップ頻度
 LOG_STEPS = 5000 # ログ出力のステップ頻度
 
+# pathの指定
+path = 'cAc/model_PreAI6_pre.pth'
 
 class Net(torch.nn.Module):
     def __init__(self, state_size: int, action_size: int):
@@ -27,9 +29,11 @@ class Net(torch.nn.Module):
         self.fc3 = torch.nn.Linear(64, action_size)
 
     def forward(self, x):
-        x = torch.relu(self.fc1(x))
+        x = torch.sigmoid(self.fc1(x))
         x = torch.relu(self.fc2(x))
-        return self.fc3(x)
+        # シグモイド関数を使用して出力を0から1の範囲に制限
+        x = torch.sigmoid(self.fc3(x))
+        return x
 
 
 
@@ -44,8 +48,8 @@ class Agent:
         self.batch_size = BATCH_SIZE
         self.target_update = TARGET_UPDATE_STEPS
 
-        self.epsilon_start = 0.5
-        self.epsilon_end = 0.1
+        self.epsilon_start = 0.05
+        self.epsilon_end = 0.0001
         self.epsilon_decay = (self.epsilon_start - self.epsilon_end) / TOTAL_TIMESTEPS
         self.epsilon = self.epsilon_start
 
@@ -54,9 +58,10 @@ class Agent:
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.count = 0
-
         self.original_qnet = Net(self.state_size, self.action_size).to(self.device)
+        self.original_qnet.load_state_dict(torch.load('/home/vyuma/dev/cAc/model_PreAI6_240.pth'))
         self.target_qnet = Net(self.state_size, self.action_size).to(self.device)
+        self.target_qnet.load_state_dict(torch.load('/home/vyuma/dev/cAc/model_PreAI6_240.pth'))
         self.sync_net()
 
         self.optimizer = optim.Adam(self.original_qnet.parameters(), self.lr)

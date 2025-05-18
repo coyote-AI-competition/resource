@@ -43,8 +43,12 @@ class ReplayBuffer:
                 self.buffer.append((state, action, reward, next_state, done))
             self.buffer.append((state, action, reward, next_state, done))
         else:
-            self.previous_buffer = (state, action, reward, next_state, done)
-            self.buffer.append(self.previous_buffer)
+            if self.previous_buffer is None:
+                self.buffer.append((state, action, reward, next_state, done))
+            else:
+                self.buffer.pop()
+                self.previous_buffer = (state, action, reward, next_state, done)
+                self.buffer.append(self.previous_buffer)
         
     def get(self) -> TorchTensor:
         data = random.sample(self.buffer, self.batch_size)
