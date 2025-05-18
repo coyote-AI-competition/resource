@@ -48,7 +48,7 @@ class Agent:
         self.batch_size = BATCH_SIZE
         self.target_update = TARGET_UPDATE_STEPS
 
-        self.epsilon_start = 0.05
+        self.epsilon_start = 0.005
         self.epsilon_end = 0.0001
         self.epsilon_decay = (self.epsilon_start - self.epsilon_end) / TOTAL_TIMESTEPS
         self.epsilon = self.epsilon_start
@@ -59,9 +59,9 @@ class Agent:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.count = 0
         self.original_qnet = Net(self.state_size, self.action_size).to(self.device)
-        self.original_qnet.load_state_dict(torch.load('/home/vyuma/dev/cAc/model_PreAI6_240.pth'))
+        self.original_qnet.load_state_dict(torch.load('/home/vyuma/dev/cAc/model_PreAI6.pth'))
         self.target_qnet = Net(self.state_size, self.action_size).to(self.device)
-        self.target_qnet.load_state_dict(torch.load('/home/vyuma/dev/cAc/model_PreAI6_240.pth'))
+        self.target_qnet.load_state_dict(torch.load('/home/vyuma/dev/cAc/model_PreAI6.pth'))
         self.sync_net()
 
         self.optimizer = optim.Adam(self.original_qnet.parameters(), self.lr)

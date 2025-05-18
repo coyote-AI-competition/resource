@@ -27,6 +27,7 @@ class PlayerReinforce(Client):
         self.count = 0 
         self.coyote = False
         self.previous_round = 0
+        self.previous_done = False
         self.done = False
         self.previous_action = 1
         
@@ -128,33 +129,24 @@ class PlayerReinforce(Client):
         if self.done:
             if len(log) == 0:
                 if self.previous_state == None:
+                    logging.debug(f'pass log: {log}')
+                    pass
+                else:
                     reward = -1
-                self.agent.add_experience(
-                        state,
+                    self.agent.add_experience(
+                        self.previous_state,
                         self.previous_action,
                         reward,
-                        next_state,
-                        self.done,
+                        state,
+                        self.previous_done,
                         is_next=True
                     )
-                else:
-                    reward = -1
-                    self.agent.add_experience(
-                        self.previous_state,
-                        action,
-                        reward,
-                        next_state,
-                        self.done,
-                        is_next=True
-                    )
-                
-                logging.debug(f"log is 0 count: {self.count}, epsilon: {self.agent.epsilon}, state: {state}, action: {action}, reward: {reward}, next_state: {next_state}, done: {self.done}")
-                logging.debug(f"action: {action}")
+                    logging.debug(f"log is 0 count: {self.count}, epsilon: {self.agent.epsilon}, state: {self.previous_state}, action: {self.previous_action}, reward: {reward}, next_state: {state}, done: {self.done}")
+                    logging.debug(f"action: {action}")
                 self.previous_state = None
-                self.done = False
             else:
                 if self.previous_state == None:
-                    reward = 1
+                    reward = 10
                     self.agent.add_experience(
                         state,
                         action,
@@ -164,19 +156,20 @@ class PlayerReinforce(Client):
                         is_next=True
                     )
                 else:
-                    reward = 1
+                    reward = 10
                     self.agent.add_experience(
                         self.previous_state,
-                        action,
+                        self.previous_action,
                         reward,
-                        next_state,
-                        self.done,
+                        state,
+                        self.previous_done,
                         is_next=True
                     )
-                logging.debug(f"coyo-te sucess!!: {self.count}, epsilon: {self.agent.epsilon}, state: {state}, action: {action}, reward: {reward}, next_state: {next_state}, done: {self.done}")
-                logging.debug(f"action: {action}")
+                logging.debug(f"coyo-te sucess!!: {self.count}, epsilon: {self.agent.epsilon}, state: {self.previous_state}, action: {self.previous_action}, reward: {reward}, next_state: {state}, done: {self.done}")
+                logging.debug(f"action: {self.previous_action}")
                 self.previous_state = None
-                self.done = False
+            self.previous_done = self.done
+            self.done = False
                 
         else:
             if self.previous_state == None:
@@ -199,17 +192,17 @@ class PlayerReinforce(Client):
                     reward = 1
                     self.agent.add_experience(
                         self.previous_state,
-                        action,
+                        self.previous_action,
                         reward,
-                        next_state,
-                        self.done,
+                        state,
+                        self.previous_done,
                         is_next=False
                     )
-                logging.debug(f"count: {self.count}, epsilon: {self.agent.epsilon}, state: {state}, action: {action}, reward: {reward}, next_state: {next_state}, done: {self.done}")
-                logging.debug(f"action: {action}")
+                    logging.debug(f"count: {self.count}, epsilon: {self.agent.epsilon}, state: {self.previous_state}, action: {self.previous_action}, reward: {reward}, next_state: {state}, done: {self.done}")
+                    logging.debug(f"action: {self.previous_action}")
             self.previous_state = state
         self.previous_action = action
-        
+        self.previous_done = self.done
         self.agent.update()
         if self.agent.epsilon < self.agent.epsilon_end:
             pass

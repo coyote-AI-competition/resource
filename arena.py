@@ -16,7 +16,6 @@ if __name__ == "__main__":
         [PlayerLogi(player_name="PreAI4", is_ai=True), "PreAI4"],
         [PlayerLogi(player_name="PreAI5", is_ai=True), "PreAI5"],
         [PlayerReinforce(player_name="PreAI6", is_ai=True), "PreAI6"],
-        
     ]
     
     arena = Arena(total_matches=5, predefined_clients=predefs)
