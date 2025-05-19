@@ -26,7 +26,7 @@ class PlayerReinforce(Client):
         self.previous_state = None
         self.count = 0 
         self.coyote = False
-        self.previous_round = 0
+        self.previous_round = 1
         self.previous_done = False
         self.done = False
         self.previous_action = 1
@@ -88,13 +88,7 @@ class PlayerReinforce(Client):
             # それ以外の時には、+1戦略を行う
             return current_declare + 1
     
-    
-    
-    def learning_step(self,others_info,actions,round,log):
-        """
-        学習するためのものを出力するためのメソッド
-        """
-    
+    def estimate_state(self,others_info,actions,round):
         # メンバーの数の取得
         N = len(others_info) + 1
         # 認識できるカード情報を取得する
@@ -123,7 +117,137 @@ class PlayerReinforce(Client):
             N
         ]
         
-        self.done = self.round_estimate(round)
+        done = self.is_done(round)
+        
+        return state, next_state, current_declare,done
+    
+    def learning_buffer(self,others_info,actions,round,log):
+        now_state,next_state,current_declare,done = self.estimate_state(
+            others_info,
+            actions,
+            round
+        )
+        self.done = done 
+        action = self.agent.get_action(now_state)
+        
+        if self.done:
+            if len(log) == 0:
+                if self.previous_state == None:
+                    logging.error(f'pass log: {log}')
+                    pass
+                else:
+                    reward = -1
+                    self.agent.add_experience(
+                        self.previous_state,
+                        self.previous_action,
+                        reward,
+                        now_state,
+                        self.done,
+                        is_next=True
+                    )
+                    logging.debug(f"Failed Coyote: {self.count}, epsilon: {self.agent.epsilon}, state: {self.previous_state}, action: {self.previous_action}, reward: {reward}, next_state: {now_state}, done: {self.done}")
+            else:
+                if self.previous_state == None:
+                    logging.error(f'pass log: {log}')
+                    reward = 10
+                    self.agent.add_experience(
+                        now_state,
+                        action,
+                        reward,
+                        next_state,
+                        self.done,
+                        is_next=True
+                    )
+                    logging.error(f'明かなエラーです。')
+                else:
+                    if self.previous_action == 0:
+                        reward = 10
+                        self.agent.add_experience(
+                            self.previous_state,
+                            self.previous_action,
+                            reward,
+                            now_state,
+                            self.done,
+                            is_next=True
+                        )
+                        logging.debug(f"coyo-te sucess!!: {self.count}, epsilon: {self.agent.epsilon}, state: {self.previous_state}, action: {self.previous_action}, reward: {reward}, next_state: {now_state}, done: {self.done}")
+                    else:
+                        reward = 1
+                        self.agent.add_experience(
+                            self.previous_state,
+                            self.previous_action,
+                            reward,
+                            now_state,
+                            self.done,
+                            is_next=True
+                        )
+                        logging.debug(f"other-coyoted: {self.count}, epsilon: {self.agent.epsilon}, state: {self.previous_state}, action: {self.previous_action}, reward: {reward}, next_state: {now_state}, done: {self.done}")
+            self.previous_state = now_state
+        else:
+            if self.previous_state == None:
+                reward = 1
+                pass 
+            else:
+                reward = 1
+                self.agent.add_experience(
+                    self.previous_state,
+                    self.previous_action,
+                    reward,
+                    now_state,
+                    self.done,
+                    is_next=False
+                )
+                logging.debug(f"count: {self.count}, epsilon: {self.agent.epsilon}, state: {self.previous_state}, action: {self.previous_action}, reward: {reward}, next_state: {now_state}, done: {self.done}")
+            self.previous_state = now_state
+        self.previous_action = action
+        self.previous_done = self.done
+        return action,current_declare
+    
+    
+    def agent_action(self,others_info,actions,log,round):
+        """
+        行動を選択するためのメソッド
+        """
+        action,current_declare = self.learning_buffer(
+            others_info,
+            actions,
+            round,
+            log
+        )
+        self.agent.update()
+        if self.agent.epsilon < self.agent.epsilon_end:
+            pass
+        else:
+            self.agent.set_epsilon()
+        self.count += 1
+        print('count', self.count)
+        if self.count % 1000 == 0:
+            self.agent.sync_net()
+            print('sync!')
+            self.agent.save_model(self.player_name)
+        
+        if action == 0 :
+            return -1 
+        else:
+            if current_declare + action > 140:
+                return -1
+            else:
+                return current_declare + action
+        
+    
+    
+    def learning_step(self,others_info,actions,round,log):
+        """
+        学習するためのものを出力するためのメソッド
+        """
+        
+        state, next_state, current_declare,done = self.estimate_state(
+            others_info,
+            actions,
+            round
+        )
+        self.done = done
+        
         action = self.agent.get_action(state)
         
         if self.done:
@@ -146,7 +270,7 @@ class PlayerReinforce(Client):
                 self.previous_state = None
             else:
                 if self.previous_state == None:
-                    reward = 10
+                    reward = 1
                     self.agent.add_experience(
                         state,
                         action,
@@ -156,7 +280,7 @@ class PlayerReinforce(Client):
                         is_next=True
                     )
                 else:
-                    reward = 10
+                    reward = 1
                     self.agent.add_experience(
                         self.previous_state,
                         self.previous_action,
@@ -228,33 +352,33 @@ class PlayerReinforce(Client):
             actions (list): 行動可能なアクションのリスト
         """
         if len(actions) == 1:
-            return 139
+            return 140
         elif len(actions) >= 2:
             return actions[1]-1
         else:
             return 0
         
-    def round_estimate(self,round_num):
-        if round_num == 1:
-            self.shuffle = True
-            self.privious_round = round_num
-            coyote = False
+    def is_done(self,round_num):
+        done = False
+        if self.previous_round == round_num:
+            logging.debug(f"round_num: {round_num}, previous_round: {self.previous_round}")
+            self.previous_round = round_num
+            done = False
+            return done
         else:
-            if self.previous_round != round_num:
-                self.previous_round= round_num
-                coyote = True
-            else:
-                coyote = False
-        return coyote
+            logging.debug(f"round_num: {round_num}, previous_round: {self.previous_round}")
+            self.previous_round = round_num
+            done = True
+            return done
+    
     
     def AI_player_action(self,others_info, sum, log, actions, round_num):
-        action = self.learning_step(
+        action = self.agent_action(
             others_info,
             actions,
-            round_num,
-            log
+            log,
+            round_num
         )
-        print("round",round_num)
         return action
 
 
@@ -263,9 +387,11 @@ class PlayerLogi(PlayerReinforce):
     def __init__(self, player_name="player1", is_ai=False):
         super().__init__(player_name, is_ai)
     def AI_player_action(self,others_info, sum, log, actions, round_num):
-        action = self.action_estimate(
+        action = self.learning_step(
             others_info,
-            actions
+            actions,
+            round_num,
+            log
         )
         return action
 

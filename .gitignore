@@ -176,3 +176,5 @@ cython_debug/
 /venv/
 env.txt
 setup_session.sh
+
+/log/
