@@ -1,0 +1,12 @@
+services:
+  kuron_on_the_desk:
+    build:
+      dockerfile: ./Dockerfile
+    container_name: desktop_server
+    ports:
+      - "$PORT:$PORT"
+    env_file:
+      - ../.env
+    volumes:
+      - ./:/app/server
+      - ../client:/app/server/client  
