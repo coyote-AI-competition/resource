@@ -48,7 +48,7 @@ class Agent:
         self.batch_size = BATCH_SIZE
         self.target_update = TARGET_UPDATE_STEPS
 
-        self.epsilon_start = 0.5
+        self.epsilon_start = 0.005
         self.epsilon_end = 0.0001
         self.epsilon_decay = (self.epsilon_start - self.epsilon_end) / TOTAL_TIMESTEPS
         self.epsilon = self.epsilon_start
@@ -58,14 +58,16 @@ class Agent:
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.count = 0
+        path = '/Users/boudenyuuma/home/dev/cAc/model_PreAI6.pth'
         self.original_qnet = Net(self.state_size, self.action_size).to(self.device)
-        
+        self.original_qnet.load_state_dict(torch.load(path))
         self.target_qnet = Net(self.state_size, self.action_size).to(self.device)
-        
+        self.target_qnet.load_state_dict(torch.load(path))
         self.sync_net()
 
         self.optimizer = optim.Adam(self.original_qnet.parameters(), self.lr)
-    
+        
+        self.losses = []
     
     def get_action(self, state) -> int:
         print('self.epsilon', self.epsilon)
@@ -82,7 +84,17 @@ class Agent:
             state = torch.tensor(state_np[np.newaxis, :].astype(np.float32), device=self.device)
             q_c = self.original_qnet(state)
             return q_c.detach().argmax().item()
-            
+    
+    def get_action_static(self,state) -> int:
+        state_np = np.array(state, dtype=np.float32)
+        state = torch.tensor(state_np[np.newaxis, :].astype(np.float32), device=self.device)
+        # evalモードにする
+        self.original_qnet.eval()
+        # 予測を行う
+        q_c = self.original_qnet(state)
+        return q_c.detach().argmax().item()
+    
+    
     def update(self) -> None:
         if len(self.replay.buffer) < self.batch_size:
             return
@@ -102,10 +114,17 @@ class Agent:
         loss = loss_function(q, target)
         self.optimizer.zero_grad()
         loss.backward()
-        print('loss', loss.item())
+        self.losses.append(loss.item())
         self.optimizer.step()
         
-        
+    def plot_loss(self,count):
+        import matplotlib.pyplot as plt
+        plt.plot(self.losses)
+        plt.xlabel('Episode')
+        plt.ylabel('Loss')
+        plt.title('Loss over Episodes')
+        plt.savefig(f'figure/loss_plot-{count}.png')
+    
     def add_experience(
         self,
         state: np.ndarray,

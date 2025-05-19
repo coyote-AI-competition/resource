@@ -30,6 +30,9 @@ class PlayerReinforce(Client):
         self.previous_done = False
         self.done = False
         self.previous_action = 1
+        self.is_newgame = True
+        self.rewards = []
+        self.now_reward = 0
         
     def players_card_list(self, others_info):
         """PLAYERのカードリストを取得する
@@ -201,8 +204,28 @@ class PlayerReinforce(Client):
             self.previous_state = now_state
         self.previous_action = action
         self.previous_done = self.done
+        
+        if self.is_newgame:
+            self.previous_round = round
+            self.is_newgame = False
+            self.rewards.append(self.now_reward)
+            self.now_reward = 0
+        else:
+            self.now_reward += reward
         return action,current_declare
     
+    def plot_reward(self, count):
+        import matplotlib.pyplot as plt
+        plt.plot(self.rewards)
+        plt.hlines(sum(self.rewards)/len(self.rewards), 0 , len(self.rewards), colors='r', linestyles='dashed',label='Average')
+        plt.hlines(min(self.rewards), 0 , len(self.rewards), colors='g', linestyles='dashed',label='Min')
+        plt.hlines(max(self.rewards), 0 , len(self.rewards), colors='b', linestyles='dashed',label='Max')
+        plt.xlabel('Episode')
+        plt.ylabel('Reward')
+        plt.title('Reward over Episodes')
+        plt.savefig(f'figure/reward_plot-{count}.png')
+        plt.close()
+        self.rewards = []
     
     def agent_action(self,others_info,actions,log,round):
         """
@@ -225,6 +248,8 @@ class PlayerReinforce(Client):
             self.agent.sync_net()
             print('sync!')
             self.agent.save_model(self.player_name)
+            if self.count % 10000 == 0:
+                self.plot_reward(self.count)
         
         if action == 0 :
             return -1 
@@ -248,7 +273,7 @@ class PlayerReinforce(Client):
         )
         self.done = done
         
-        action = self.agent.get_action(state)
+        action = self.agent.get_action_static(state)
         
         if self.done:
             if len(log) == 0:
@@ -327,7 +352,7 @@ class PlayerReinforce(Client):
             self.previous_state = state
         self.previous_action = action
         self.previous_done = self.done
-        self.agent.update()
+        # self.agent.update()
         if self.agent.epsilon < self.agent.epsilon_end:
             pass
         else:
@@ -365,10 +390,16 @@ class PlayerReinforce(Client):
             self.previous_round = round_num
             done = False
             return done
-        else:
+        elif self.previous_round < round_num:
             logging.debug(f"round_num: {round_num}, previous_round: {self.previous_round}")
             self.previous_round = round_num
             done = True
+            return done
+        else:
+            logging.debug(f"round_num: {round_num}, previous_round: {self.previous_round}")
+            self.previous_round = round_num
+            self.is_newgame = True
+            done = False
             return done
     
     
@@ -387,11 +418,9 @@ class PlayerLogi(PlayerReinforce):
     def __init__(self, player_name="player1", is_ai=False):
         super().__init__(player_name, is_ai)
     def AI_player_action(self,others_info, sum, log, actions, round_num):
-        action = self.learning_step(
+        action = self.action_estimate(
             others_info,
-            actions,
-            round_num,
-            log
+            actions
         )
         return action
 
