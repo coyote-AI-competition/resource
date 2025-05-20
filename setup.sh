@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+# set -e
 
 # GithubのURL
 # GITHUB_URL="https://github.com/coyote-AI-competition/resource"

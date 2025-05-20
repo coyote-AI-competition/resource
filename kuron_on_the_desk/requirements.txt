@@ -1,0 +1,7 @@
+flask
+tensorflow
+open-spiel==1.5
+numpy
+tqdm
+matplotlib
+python-dotenv

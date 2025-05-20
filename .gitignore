@@ -176,3 +176,10 @@ cython_debug/
 /venv/
 env.txt
 setup_session.sh
+
+nohup.out
+/client/checkpoints_*/
+/client/*.npy
+/client/*.txt
+
+!/client/Kuron.txt
