@@ -415,12 +415,15 @@ class PlayerReinforce(Client):
     
     
     def AI_player_action(self,others_info, sum, log, actions, round_num):
-        action = self.agent_action(
-            others_info,
-            actions,
-            log,
-            round_num
-        )
+        if eval == False:
+            action = self.agent_action(
+                others_info,
+                actions,
+                log,
+                round_num
+            )
+        else:
+            action = self.
         return action
 
 
