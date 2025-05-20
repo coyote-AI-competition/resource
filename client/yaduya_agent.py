@@ -8,7 +8,7 @@ import logging
 
 # ログの設定
 logging.basicConfig(
-  filename='example.log',   # ログファイルの名前
+  filename='logs/example.log',   # ログファイルの名前
   level=logging.DEBUG,      # ログレベル（DEBUG以上のレベルが記録される）
 )
 # N = Player 
@@ -31,6 +31,7 @@ class PlayerReinforce(Client):
         self.done = False
         self.previous_action = 1
         self.is_newgame = True
+        self.all_rewards = []
         self.rewards = []
         self.now_reward = 0
         
@@ -200,7 +201,6 @@ class PlayerReinforce(Client):
                     self.done,
                     is_next=False
                 )
-                logging.debug(f"count: {self.count}, epsilon: {self.agent.epsilon}, state: {self.previous_state}, action: {self.previous_action}, reward: {reward}, next_state: {now_state}, done: {self.done}")
             self.previous_state = now_state
         self.previous_action = action
         self.previous_done = self.done
@@ -223,9 +223,19 @@ class PlayerReinforce(Client):
         plt.xlabel('Episode')
         plt.ylabel('Reward')
         plt.title('Reward over Episodes')
-        plt.savefig(f'figure/reward_plot-{count}.png')
+        plt.savefig(f'figure/reward_epoch_net/reward_plot-{count}.png')
         plt.close()
+        self.all_rewards.extend(self.rewards)
         self.rewards = []
+        plt.plot(self.all_rewards)
+        plt.hlines(sum(self.all_rewards)/len(self.all_rewards), 0 , len(self.all_rewards), colors='r', linestyles='dashed',label='Average')
+        plt.hlines(min(self.all_rewards), 0 , len(self.all_rewards), colors='g', linestyles='dashed',label='Min')
+        plt.hlines(max(self.all_rewards), 0 , len(self.all_rewards), colors='b', linestyles='dashed',label='Max')
+        plt.xlabel('Episode')
+        plt.ylabel('Reward')
+        plt.title('Reward over Episodes')
+        plt.savefig(f'figure/all_reward_net/all_reward_plot-{count}.png')
+        plt.close()
     
     def agent_action(self,others_info,actions,log,round):
         """
@@ -250,6 +260,7 @@ class PlayerReinforce(Client):
             self.agent.save_model(self.player_name)
             if self.count % 10000 == 0:
                 self.plot_reward(self.count)
+                self.agent.plot_loss(self.count)
         
         if action == 0 :
             return -1 

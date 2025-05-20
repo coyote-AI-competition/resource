@@ -11,3 +11,4 @@ torchvision
 numpy
 pandas
 scikit-learn
+schedulefree

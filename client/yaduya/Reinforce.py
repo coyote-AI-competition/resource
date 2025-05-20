@@ -1,5 +1,6 @@
 from torch import optim
 import torch 
+from schedulefree import RAdamScheduleFree
 import random
 import numpy as np
 import torch.nn as nn
@@ -7,6 +8,8 @@ import torch.nn as nn
 from typing import Union
 import copy
 from .replay import ReplayBuffer
+import logging
+
 TOTAL_TIMESTEPS = 50000 # 総ステップ数
 MAX_STEP = 500 # 1エピソードでの最大ステップ数
 BUFFER_SIZE = 1000000 #バッファサイズ
@@ -21,12 +24,19 @@ LOG_STEPS = 5000 # ログ出力のステップ頻度
 # pathの指定
 path = 'cAc/model_PreAI6_pre.pth'
 
+
+# ログの設定
+# ログの設定
+logging.basicConfig(
+  filename='logs/agent.log',   # ログファイルの名前
+  level=logging.DEBUG,      # ログレベル（DEBUG以上のレベルが記録される）
+)
 class Net(torch.nn.Module):
-    def __init__(self, state_size: int, action_size: int):
+    def __init__(self, state_size: int, action_size: int,hidden_size: int = 128):
         super(Net, self).__init__()
-        self.fc1 = torch.nn.Linear(state_size, 64)
-        self.fc2 = torch.nn.Linear(64, 64)
-        self.fc3 = torch.nn.Linear(64, action_size)
+        self.fc1 = torch.nn.Linear(state_size, hidden_size)
+        self.fc2 = torch.nn.Linear(hidden_size, hidden_size)
+        self.fc3 = torch.nn.Linear(hidden_size, action_size)
 
     def forward(self, x):
         x = torch.sigmoid(self.fc1(x))
@@ -35,6 +45,24 @@ class Net(torch.nn.Module):
         x = torch.sigmoid(self.fc3(x))
         return x
 
+
+class SelfAttention(nn.Module):
+    def __init__(self,state_size: int, action_size: int,hidden_size: int = 128):
+        super(SelfAttention, self).__init__()
+        self.fc1 = nn.Linear(state_size, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.fc3 = nn.Linear(hidden_size, action_size)
+        self.attention = nn.MultiheadAttention(embed_dim=hidden_size, num_heads=4,dropout=0.1)
+        self.norm = nn.LayerNorm(hidden_size)
+    def forward(self, x):
+        x = torch.sigmoid(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        x = x.unsqueeze(0) 
+        atten_out, _ = self.attention(x, x, x)
+        atten_out = self.norm(atten_out + x)
+        atten_out = atten_out.squeeze(0)
+        x = torch.sigmoid(self.fc3(atten_out))
+        return x
 
 
 class Agent:
@@ -48,25 +76,22 @@ class Agent:
         self.batch_size = BATCH_SIZE
         self.target_update = TARGET_UPDATE_STEPS
 
-        self.epsilon_start = 0.005
+        self.epsilon_start = 0.05
         self.epsilon_end = 0.0001
         self.epsilon_decay = (self.epsilon_start - self.epsilon_end) / TOTAL_TIMESTEPS
         self.epsilon = self.epsilon_start
 
         self.replay = ReplayBuffer(self.buffer_size, self.batch_size)
         self.data = None
-
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.count = 0
-        path = '/Users/boudenyuuma/home/dev/cAc/model_PreAI6.pth'
+        path = '/home/vyuma/dev/cAc/models/model_PreAI6_128_313.pth'
         self.original_qnet = Net(self.state_size, self.action_size).to(self.device)
         self.original_qnet.load_state_dict(torch.load(path))
         self.target_qnet = Net(self.state_size, self.action_size).to(self.device)
         self.target_qnet.load_state_dict(torch.load(path))
         self.sync_net()
-
-        self.optimizer = optim.Adam(self.original_qnet.parameters(), self.lr)
-        
+        self.optimizer = RAdamScheduleFree(self.original_qnet.parameters(), self.lr)
         self.losses = []
     
     def get_action(self, state) -> int:
@@ -90,6 +115,7 @@ class Agent:
         state = torch.tensor(state_np[np.newaxis, :].astype(np.float32), device=self.device)
         # evalモードにする
         self.original_qnet.eval()
+        self.optimizer.eval()
         # 予測を行う
         q_c = self.original_qnet(state)
         return q_c.detach().argmax().item()
@@ -98,7 +124,8 @@ class Agent:
     def update(self) -> None:
         if len(self.replay.buffer) < self.batch_size:
             return
-            
+        self.original_qnet.train()
+        self.optimizer.train()
         self.data = self.replay.get()
         
         q_c = self.original_qnet(self.data.state)
@@ -114,16 +141,16 @@ class Agent:
         loss = loss_function(q, target)
         self.optimizer.zero_grad()
         loss.backward()
+        logging.debug(f"loss: {loss.item()}")
         self.losses.append(loss.item())
         self.optimizer.step()
-        
     def plot_loss(self,count):
         import matplotlib.pyplot as plt
         plt.plot(self.losses)
         plt.xlabel('Episode')
         plt.ylabel('Loss')
         plt.title('Loss over Episodes')
-        plt.savefig(f'figure/loss_plot-{count}.png')
+        plt.savefig(f'figure/losses/loss_plot-{count}.png')
     
     def add_experience(
         self,
@@ -143,4 +170,4 @@ class Agent:
         self.epsilon -= self.epsilon_decay
         
     def save_model(self,model_name) -> None:
-        torch.save(self.original_qnet.state_dict(), f'model_{model_name}.pth')
+        torch.save(self.original_qnet.state_dict(), f'models/model_{model_name}_128.pth')

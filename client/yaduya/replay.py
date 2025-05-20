@@ -37,7 +37,6 @@ class ReplayBuffer:
         done: bool,
         is_next : bool = False,
         ) -> None:
-        print('buffer',len(self.buffer))
         if is_next:
             if self.buffer is None:
                 self.buffer.append((state, action, reward, next_state, done))
