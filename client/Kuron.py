@@ -78,34 +78,3 @@ class Kuron(Client):
         print(f"[Kuron] Used card: {self.used_card_ls + visible_cards}")
 
         return self.used_card_ls + visible_cards
-
-        #Estimate the used card based on others_info, sum, log, actions
-
-        # if self.life_ls exists:
-        if len(self.life_dict) == 0:
-            for info in others_info:
-                print(f"[StatClient] Life info: {info}")
-                self.life_dict[info["name"]] = info["life"]
-            self.last_other_info = others_info  # Store the initial state of others_info
-
-        now_life_dict = {info["name"] :info["life"] for info in others_info}
-        # Check if the life_dict has changed
-        if self.life_dict != now_life_dict:
-            print(f"[StatClient] Life before: {self.life_dict}")
-            self.life_dict = dict()  # Reset life_dict for the new game state
-            for info in others_info:
-                self.life_dict[info["name"]] = info["life"]
-            
-            for info in self.last_other_info:
-                self.used_card_ls.append(info["card_info"])
-
-            if 101 in self.used_card_ls:
-                self.used_card_ls = []
-
-            self.last_other_info = others_info  # Update last_other_info to the current state
-            print(f"[StatClient] Life after: {self.life_dict}")
-
-        visible_cards = [info["card_info"] for info in others_info]
-        print(f"[StatClient] Used card: {self.used_card_ls + visible_cards}")
-
-        return self.used_card_ls + visible_cards

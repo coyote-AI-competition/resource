@@ -17,7 +17,7 @@ import tensorflow.compat.v1 as tf
 from game_setting import *
 
 
-_NUM_PLAYERS = 6  # プレイヤー数
+_NUM_PLAYERS = 6  # プレイヤー数 訓練モデルに合わせて変更
 
 if __name__ == "__main__":
 
@@ -28,11 +28,10 @@ if __name__ == "__main__":
 
     dirname = os.path.dirname(__file__)
 
-    # while True:
     # 保存先パス
-    ckpt_path = os.path.join(dirname, f"checkpoints_{_NUM_PLAYERS}", "deep_cfr.ckpt")
-    # for _ in tqdm.tqdm(range(100000)):
-    #     # セッション開始
+    ckpt_path = os.path.join(dirname, "../", f"checkpoints_{_NUM_PLAYERS}", "deep_cfr.ckpt")
+
+    # セッション開始
     with tf.Session() as sess:
 
         # DeepCFRSolver 構築
@@ -61,17 +60,17 @@ if __name__ == "__main__":
             saver.restore(sess, ckpt_path)
             print("✅ Model restored!")
             # epochの復元
-            with open(os.path.join(dirname, f"epoch_{_NUM_PLAYERS}.txt"), "r") as f:
+            with open(os.path.join(dirname, "../", f"epoch_{_NUM_PLAYERS}.txt"), "r") as f:
                 epoch = int(f.read())
             print("Epoch:", epoch)
 
             # Advantage lossesの復元
-            with open(os.path.join(dirname, f"advantage_losses_{_NUM_PLAYERS}.npy"), "rb") as f:
+            with open(os.path.join(dirname, "../", f"advantage_losses_{_NUM_PLAYERS}.npy"), "rb") as f:
                 advantage_losses_history = np.load(f, allow_pickle=True)
             # print("Advantage losses:", advantage_losses_history[-1])
 
             # Policy lossの復元
-            with open(os.path.join(dirname, f"policy_loss_{_NUM_PLAYERS}.npy"), "rb") as f:
+            with open(os.path.join(dirname, "../", f"policy_loss_{_NUM_PLAYERS}.npy"), "rb") as f:
                 policy_loss_history = np.load(f, allow_pickle=True)
             print("Policy loss:", policy_loss_history[-1])
         
@@ -93,7 +92,7 @@ if __name__ == "__main__":
             saver.save(sess, ckpt_path)
             print("💾 Model saved to:", ckpt_path)
 
-            with open(os.path.join(dirname, f"epoch_{_NUM_PLAYERS}.txt"), "w") as f:
+            with open(os.path.join(dirname, "../", f"epoch_{_NUM_PLAYERS}.txt"), "w") as f:
                 f.write(str(i + 1))
 
             advantage_losses_ls = np.array([advantage_losses[i] for i in range(_NUM_PLAYERS)]).reshape(-1, _NUM_PLAYERS)
@@ -108,8 +107,8 @@ if __name__ == "__main__":
             policy_loss_history = np.append(policy_loss_history, policy_loss)
 
             # 保存
-            np.save(os.path.join(dirname, f"advantage_losses_{_NUM_PLAYERS}.npy"), advantage_losses_history)
-            np.save(os.path.join(dirname, f"policy_loss_{_NUM_PLAYERS}.npy"), policy_loss_history)
+            np.save(os.path.join(dirname, "../", f"advantage_losses_{_NUM_PLAYERS}.npy"), advantage_losses_history)
+            np.save(os.path.join(dirname, "../", f"policy_loss_{_NUM_PLAYERS}.npy"), policy_loss_history)
 
             # plot loss
             for i in range(_NUM_PLAYERS):

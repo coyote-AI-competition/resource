@@ -17,7 +17,7 @@ import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()  # TF1互換モードに切り替え
 
 
-_NUM_PLAYERS = 6  # プレイヤー数
+_NUM_PLAYERS = 6  # プレイヤー数　訓練モデルに合わせて変更
 _NUM_DECLARATIONS = 121  # 宣言の最大値
 
 _GAME_TYPE = pyspiel.GameType(

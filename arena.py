@@ -1,5 +1,5 @@
 from server.arena import Arena
-from client.Takanori_Kotama import Kuron
+from client.Kuron import Kuron
 
 if __name__ == "__main__":
     # -- Example usage --

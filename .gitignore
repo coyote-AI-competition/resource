@@ -181,3 +181,5 @@ nohup.out
 /client/checkpoints_*/
 /client/*.npy
 /client/*.txt
+
+!/client/Kuron.txt
