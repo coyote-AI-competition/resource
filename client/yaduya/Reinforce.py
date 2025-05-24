@@ -85,11 +85,12 @@ class Agent:
         self.data = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.count = 0
-        path = '/home/vyuma/dev/cAc/models/model_PreAI6_128_313.pth'
-        self.original_qnet = Net(self.state_size, self.action_size).to(self.device)
-        self.original_qnet.load_state_dict(torch.load(path))
-        self.target_qnet = Net(self.state_size, self.action_size).to(self.device)
-        self.target_qnet.load_state_dict(torch.load(path))
+        path_net = '/home/vyuma/dev/cAc/models/model_PreAI6_128_313.pth'
+        atten_path = "/home/vyuma/dev/cAc/models/model_PreAI6_atten_2319_7000.pth"
+        self.original_qnet = SelfAttention(self.state_size, self.action_size).to(self.device)
+        self.original_qnet.load_state_dict(torch.load(atten_path))
+        self.target_qnet = SelfAttention(self.state_size, self.action_size).to(self.device)
+        self.target_qnet.load_state_dict(torch.load(atten_path))
         self.sync_net()
         self.optimizer = RAdamScheduleFree(self.original_qnet.parameters(), self.lr)
         self.losses = []

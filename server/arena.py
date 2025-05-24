@@ -16,7 +16,7 @@ class Arena:
     指定した回数だけ対戦させるクラス。
     ebSocket を使わずに、複数の LocalClient インスタンスと対戦させる。
     """
-
+    
     def __init__(self, total_matches=3, predefined_clients=None):
         """
         total_matches: 対戦回数

@@ -409,21 +409,22 @@ class PlayerReinforce(Client):
         else:
             logging.debug(f"round_num: {round_num}, previous_round: {self.previous_round}")
             self.previous_round = round_num
-            self.is_newgame = True
+            self.is_newgame = True 
             done = False
             return done
     
     
     def AI_player_action(self,others_info, sum, log, actions, round_num):
-        if eval == False:
-            action = self.agent_action(
-                others_info,
-                actions,
-                log,
-                round_num
-            )
+        now_state,next_state,current_declare,done = self.estimate_state(
+            others_info,
+            actions,
+            round_num
+        )
+        action = self.agent.get_action_static(now_state)
+        if current_declare + action > 140:
+            action = -1
         else:
-            action = self.
+            action = current_declare + action
         return action
 
 

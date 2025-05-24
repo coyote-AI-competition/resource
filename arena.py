@@ -10,6 +10,7 @@ if __name__ == "__main__":
     from client.yaduya_agent import PlayerLogi as PlayerLogi
     
     predefs = [
+        
         [PlayerLogi(player_name="PreAI1", is_ai=True), "PreAI1"],
         [PlusOneClient(player_name="PreAI2", is_ai=True), "PreAI2"],
         [PlayerLogi(player_name="PreAI3", is_ai=True), "PreAI3"],
