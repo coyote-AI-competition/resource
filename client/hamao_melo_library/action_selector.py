@@ -121,7 +121,7 @@ class ActionSelector:
         next_min_score = bisect_left(possible_scores, declared_sum + 1)
         return possible_scores[next_min_score]
 
-    def choice_action(self, others_info, unseen_probs, declared_sum, next_min_score):
+    def choice_action(self, others_info, unseen_probs, declared_sum, next_min_score, gap_player):
         """
         others_info: List[{"card_info": int, "is_next": bool}, ...]
         → 自分以外の人が場に出しているカード情報（次のプレイヤーは is_next=True）
@@ -169,7 +169,9 @@ class ActionSelector:
             else:
                 break
 
-        if success_probs >= 0.9:
+        if gap_player and success_probs >= 0.95:
+            return -1
+        elif not gap_player and success_probs >= 0.8:
             return -1
         else:
             return next_min_score
