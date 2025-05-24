@@ -15,7 +15,7 @@ class AkazdayoClient(Client):
         self,
         player_name="GeminiAI",
         is_ai=True,
-        llm_model="gemini-2.5-flash-preview-04-17",
+        llm_model="gemini-2.5-flash-preview-05-20",
     ):
         super().__init__(player_name=player_name, is_ai=is_ai)
         self.model = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
