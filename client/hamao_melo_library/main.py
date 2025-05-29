@@ -40,7 +40,6 @@ class MyLibrary:
                             gap_cnt,
                             total_cnt + 1,
                         )
-                        print(self.player_declaration_gap)
                     else:
                         gap_cnt = 1 if gap >= 10 else 0
                         self.player_declaration_gap[player_name] = (gap_cnt, 1)
