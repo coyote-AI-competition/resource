@@ -22,9 +22,9 @@ class ActionSelector:
         for c in cards:
             if c == 100:
                 doubled = True
-            elif c == 101:
-                max_to_zero = True
             elif c == 102:
+                max_to_zero = True
+            elif c == 101:
                 normal.append(0)
             else:
                 assert c < 100, "Invalid card value"

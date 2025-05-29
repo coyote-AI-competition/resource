@@ -12,8 +12,8 @@ ALL_CARD = {
     15: 2,
     20: 1,
     100: 1,  # ×2カード
-    101: 1,  # max→0カード
-    102: 1,  # 黒0カード（シャッフル）
+    101: 1,  # 黒0カード（シャッフル）max→0カード
+    102: 1,  # max→0カード
     103: 1,  # ?カード（コヨーテ対応）
 }
 
@@ -103,7 +103,7 @@ class CardsPredictor:
 
             # (a) 黒0出現, (b) 総枚数超過, (c) カード別枚数超過
             if (
-                ((102 in entry) and idx + 1 < len(self.log_list))
+                ((101 in entry) and idx + 1 < len(self.log_list))
                 or (total_seen > TOTAL_CARDS)
                 or any((c != 404 and counts[c] > ALL_CARD.get(c, 0)) for c in entry)
             ):
