@@ -112,6 +112,7 @@ class CardsPredictor:
 
         # 条件に当てはまったログとそれ以前を削除
         if remove_idx is not None:
+            remove_idx = min(remove_idx, len(self.log_list) - 2)
             self.log_list = self.log_list[remove_idx + 1 :]
 
     def update_probs(self):
