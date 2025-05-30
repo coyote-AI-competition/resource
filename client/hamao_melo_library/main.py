@@ -57,7 +57,7 @@ class MyLibrary:
         if len(actions) == 1:
             return -1
         # 最初の番であり、コヨーテが出来ない場合は0以上であり得る数の最小
-        if actions[1] == 1:
+        if actions[0] != 1:
             next_min = self.action_selector.calc_next_min(others_info, 0)
             return next_min
 

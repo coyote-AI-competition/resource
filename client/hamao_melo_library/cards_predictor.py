@@ -12,7 +12,7 @@ ALL_CARD = {
     15: 2,
     20: 1,
     100: 1,  # ×2カード
-    101: 1,  # 黒0カード（シャッフル）max→0カード
+    101: 1,  # 黒0カード（シャッフル）
     102: 1,  # max→0カード
     103: 1,  # ?カード（コヨーテ対応）
 }
@@ -112,7 +112,6 @@ class CardsPredictor:
 
         # 条件に当てはまったログとそれ以前を削除
         if remove_idx is not None:
-            remove_idx = min(len(self.log_list) - 2, remove_idx)
             self.log_list = self.log_list[remove_idx + 1 :]
 
     def update_probs(self):
@@ -139,19 +138,21 @@ class CardsPredictor:
                     if (bit >> idx) & 1:
                         # 黒0が出たとする場合
                         prob *= 2.0 / now_cards_num
+                        now_cards_num = TOTAL_CARDS
                     else:
                         # 黒0が出なかったとする場合
                         prob *= (now_cards_num - 2) / now_cards_num
-                    now_cards_num -= 2
+                        now_cards_num -= 2
                 elif 404 in self.log_list[idx]:
                     # 空白のターンについて
                     if (bit >> idx) & 1:
                         # 黒0が出たとする場合
                         prob *= len(self.log_list[idx]) / now_cards_num
+                        now_cards_num = TOTAL_CARDS
                     else:
                         amari_card = now_cards_num - len(self.log_list[idx])
                         prob *= amari_card / now_cards_num
-                    now_cards_num -= len(self.log_list[idx]) + 1
+                        now_cards_num -= len(self.log_list[idx]) + 1
                 else:
                     # ?カードが出なかった場合
                     now_cards_num -= len(self.log_list[idx])
@@ -159,9 +160,10 @@ class CardsPredictor:
                     if (bit >> idx) & 1:
                         # 黒0が出たとする場合
                         prob *= 1.0 / now_cards_num
+                        now_cards_num = TOTAL_CARDS
                     else:
                         prob *= (now_cards_num - 1) / now_cards_num
-                    now_cards_num -= 1
+                        now_cards_num -= 1
 
             # まだ出ていないカードは最新のログから計算する
             each_card_num = {card: 0 for card in ALL_CARD}
@@ -186,8 +188,9 @@ class CardsPredictor:
                 remain = max_cnt - seen
                 if remain > 0 and card != 103:
                     pre_cnt, pre_prob = self.unseen_probs[card]
+                    nn_cnt = pre_cnt if pre_cnt > 0 else remain
                     self.unseen_probs[card] = (
-                        max(pre_cnt, remain),
+                        nn_cnt,
                         pre_prob + (prob * remain / max_cnt) / unseen_cards_sum,
                     )
 

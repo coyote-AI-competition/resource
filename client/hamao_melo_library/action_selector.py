@@ -121,6 +121,8 @@ class ActionSelector:
 
         # あり得るスコアの中で、宣言値+1以上の中で最小の値を探す
         next_min_score = bisect_left(possible_scores, declared_sum + 1)
+        if next_min_score >= len(possible_scores):
+            return declared_sum + 1
         return possible_scores[next_min_score]
 
     def choice_action(
