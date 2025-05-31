@@ -1,6 +1,4 @@
-from client.not_websocket_client import Client
-
-class SampleClient(Client):
+class ClientMJ(Client):
     def AI_player_action(self,others_info, see_sum, log, actions, round_num):
       # カスタムロジックを実装
         print(f"[SampleClient] AI deciding action based on sum: {see_sum}, log: {log}, actions: {actions},others_info: {others_info}, round_num: {round_num}")
@@ -20,22 +18,22 @@ class SampleClient(Client):
             possible_sums.append(see_sum + int(card))
           elif card == 100:
             possible_sums.append(see_sum * 2)
-          elif card == 101:
+          elif card == 102:
             tmp = see_sum - max(opponent_cards)
             possible_sums.append(tmp)
-          elif card == 102:
-            possible_sums.append(see_sum + 1)
+          elif card == 101:
+            possible_sums.append(see_sum)
           elif card == 103:
             for card in my_possible_cards:
               if not card in [100, 101, 102, 103]:
                 possible_sums.append(see_sum + int(card))
               elif card == 100:
                 possible_sums.append(see_sum * 2)
-              elif card == 101:
+              elif card == 102:
                 tmp = see_sum - max(opponent_cards)
                 possible_sums.append(tmp)
-              elif card == 102:
-                possible_sums.append(see_sum + 1)
+              elif card == 101:
+                possible_sums.append(see_sum)
               elif card == 103:
                 pass
 
@@ -47,15 +45,15 @@ class SampleClient(Client):
 
         # 事後分布の計算
         for l in log:
-            act = int(l['action']) 
+            act = int(l['action'])
 
             likelihoods_for_sum = []
-            for s_idx, s_val in enumerate(sum_range): 
+            for s_idx, s_val in enumerate(sum_range):
                 true_sum_candidate = s_val
                 if true_sum_candidate < act:
                     likelihood = 0.1
                 else:
-                    likelihood = 0.9 
+                    likelihood = 0.90
                 likelihoods_for_sum.append(likelihood)
 
             new_p_list = [p_prior * likelihood for p_prior, likelihood in zip(p_list, likelihoods_for_sum)]
@@ -78,6 +76,10 @@ class SampleClient(Client):
           action = 1
         else:
           action = p_list[act + 20 :].index(max(p_list[act + 20 :])) + act + 1
+
+        print(f"[SampleClient] AI selected action: {action}")
+        return action
+
 
         print(f"[SampleClient] AI selected action: {action}")
         return action
