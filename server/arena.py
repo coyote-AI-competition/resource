@@ -6,6 +6,8 @@ import json
 import os
 import random
 from tqdm import tqdm  
+from collections import defaultdict
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from client.not_websocket_client import Client as LocalClient
@@ -40,6 +42,8 @@ class Arena:
         self.is_shuffle_card = False
         self.is_double_card = False
         
+        self.death_orders = defaultdict(lambda:defaultdict(int))
+
         # 例: [[LocalClient(...), "AI_1"], [SomeOtherAIClient(...), "MyAI"]]
         self.predefined_clients = predefined_clients if predefined_clients else []
 
@@ -158,6 +162,7 @@ class Arena:
             
         self.active_players = self.players[:]
         self.deck.reset()
+        random.shuffle(self.active_players)
 
         # 一度に何度もラウンドを回して、最後の1人になるまで続行
         while len(self.active_players) > 1:
@@ -224,7 +229,10 @@ class Arena:
             
             # sum_of_others = self.sum_of_others_cards(other_cards)
             sum_of_others = self.convert_card(other_cards, True)
-            legal_actions = [-1, last_call+1, 140]
+            if turn_count == 0:
+                legal_actions = [1, 1, 140]
+            else:
+                legal_actions = [-1, last_call+1, 140]
 
             # turn_handling相当
             turn_data = {
@@ -236,7 +244,19 @@ class Arena:
                 "log": self.logs["round_info"][-1]["turn_info"],  # これまでのturnログ
                 "legal_action": legal_actions
             }
+
             action = current_player.handle_turn(turn_data)
+
+            min_range = legal_actions[1]
+            max_range = legal_actions[2]
+
+            actions = [legal_actions[0], *range(min_range, max_range+1)]
+
+            if action not in actions:
+                # 不正なアクションが選ばれた場合は -1 (コヨーテ) として扱う
+                self._log(f"Invalid action {action} by {current_player.player_name}. Treating as COYOTE (-1).")
+                action = legal_actions[1]  # -1 = コヨーテ
+
             if self.use_tqdm:
                 self.progress_bar.refresh()
 
@@ -336,6 +356,8 @@ class Arena:
             prev_player.life -= 1
             self.turn_index = prev_idx
             if prev_player.life <= 0:
+                self.death_orders[prev_player.player_name][len(self.active_players)+1] += 1
+                
                 self._log(f"{prev_player.player_name} is dead!")
                 self.active_players.remove(prev_player)
                 self.death_order.append(prev_player.player_name)
@@ -347,6 +369,8 @@ class Arena:
             coyote_player.life -= 1
             self.turn_index = c_idx
             if coyote_player.life <= 0:
+                self.death_orders[prev_player.player_name][len(self.active_players)+1] += 1
+                
                 self._log(f"{coyote_player.player_name} is dead!")
                 self.active_players.remove(coyote_player)
                 self.death_order.append(coyote_player.player_name)
@@ -357,14 +381,18 @@ class Arena:
         全ゲーム終了後の集計
         """
         self._log("\n=== [FINAL RESULT] ===\n")
+        self.logs["total_win_num"] = []
+        self.logs["death_orders"] = self.death_orders
+        self.death_orders = defaultdict(lambda:defaultdict(int))
         for name, wins in self.win_count_map.items():
             self._log(f"{name}: {wins} wins")
+        
     
     def save_log_json(self):
         log_folder = "./log/"
         retry_count = 0
 
-               # ログフォルダが存在しない場合は作成
+        # ログフォルダが存在しない場合は作成
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)
 
@@ -383,7 +411,6 @@ class Arena:
             except Exception as e:
                 self._log(f"Failed to write to the log file: {e}")
         self._log("Failed to write to the log file after multiple attempts.")
-
 
 if __name__ == "__main__":
       # -- Example usage --
@@ -404,6 +431,7 @@ if __name__ == "__main__":
     
     arena = Arena()
     arena.run()
+
 
 
 
