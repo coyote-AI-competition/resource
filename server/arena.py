@@ -16,7 +16,7 @@ class Arena:
     指定した回数だけ対戦させるクラス。
     ebSocket を使わずに、複数の LocalClient インスタンスと対戦させる。
     """
-    
+
     def __init__(self, total_matches=3, predefined_clients=None):
         """
         total_matches: 対戦回数
@@ -191,10 +191,10 @@ class Arena:
         """
         # カードを引く
         for p in self.active_players:
-            card = self.deck.draw()
             if self.deck.cards == []:
                 self._log("Deck is empty. Resetting the deck.")
                 self.deck.reset()
+            card = self.deck.draw()
             p.hold_card = card 
 
         # ラウンドログを作る
@@ -216,7 +216,7 @@ class Arena:
         last_call = 0
         turn_count = 0
         while (len(self.active_players) > 1):
-            current_player = self.active_players[self.turn_index%len(self.active_players)]
+            current_player = self.active_players[self.turn_index % len(self.active_players)]
 
             print(f"get_others_info: {self.get_others_info(current_player, self.active_players)}")
             # otherカード合計
@@ -224,7 +224,7 @@ class Arena:
             
             # sum_of_others = self.sum_of_others_cards(other_cards)
             sum_of_others = self.convert_card(other_cards, True)
-            legal_actions = [-1, last_call+1, 120]
+            legal_actions = [-1, last_call+1, 140]
 
             # turn_handling相当
             turn_data = {
@@ -404,3 +404,4 @@ if __name__ == "__main__":
     
     arena = Arena()
     arena.run()
+
