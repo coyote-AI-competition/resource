@@ -174,8 +174,8 @@ class SampleClient(Client):
             index += 1
 
         return self.calc_card_sum(true_cards)   #関数の外に合計値を返す
-           
-    def AI_player_action(self,others_info, sum, log, player_card, actions, round_num):
+         
+    def AI_player_action(self,others_info, sum, log, actions, round_num):
         logger.info(f"[SampleClient] AI deciding action based on sum: {sum}, log: {log}, actions: {actions}, others_info: {others_info}, round_num: {round_num}")
         
         # モデルがロードされていない場合はランダムな行動を選択
