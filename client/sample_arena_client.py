@@ -1,206 +1,148 @@
-import os
-import numpy as np
-import threading
-from pathlib import Path
-from collections import deque
-import tensorflow as tf
 from .not_websocket_client import Client
-from .Back.train_deepcfr_for_coyote import train_deepcfr_for_coyote
-from .Back.make_decision import make_decision
-from .Back.StrategyNetwork import StrategyNetwork
-from .Back.create_advantage_network import create_advantage_network
-from .Back.CFRTrainingEvaluator import  visualize_model_prediction, CFRTrainingEvaluator
-from .Back.reservoirbuffer import ReservoirBuffer
-from datetime import datetime
 import random
-import logging
 
-class SampleClient(Client):
-    def __init__(self, player_name, is_ai=True):
-        super().__init__()
-        # strategy_netsを初期化
-        self.player_name = player_name
-        self.is_ai = is_ai
-        self.input_size = 317
-        self.total_sum = 0
-        # Create directories if they don't exist
-        Path("models").mkdir(exist_ok=True) #モデルというフォルダが存在するか
-        Path("save_picture").mkdir(exist_ok=True) # sava_pictureというフォルダが存在するか
-        self.strategy_net = StrategyNetwork(self.total_sum,self.input_size)  # 必要な引数を指定
-        self.advantage_net = create_advantage_network(self) #アドバンテージネットワークの作成
-
-        self._load_model()# モデルの読み込み
-        self.previous_round_num = 0# 直前のラウンド番号
-        self.Is_coyoted = None # プレイヤーがコヨーテかどうかのフラグ
-        self.trajectory_value = 0 #ラウンドの価値を保存する変数
-        self.prev_others_life = [] # 直前の他プレイヤーのライフを保存する変数
-        self.advantage_buffer = ReservoirBuffer()
-        self.strategy_buffer = ReservoirBuffer()
-        batch_size = 32
-        # policy_targetsの初期化（32×141の確率分布）
-        raw_targets = np.random.random((batch_size, 141))  # 32サンプル分のランダムな正の値を生成
-        # 確率分布に正規化（各行の合計を1にする）
-        self.policy_targets = raw_targets / raw_targets.sum(axis=1, keepdims=True)
+class ConstClient(Client):
+    def __init__(self, player_name="RandomAI", is_ai=True):
+        super().__init__(player_name=player_name, is_ai=is_ai)
+        self.round_number = 0
+        self.cards =[100, 101, 102, 103, -10, -5, -5, 0, 0, 0, 
+        1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+        5, 5, 5, 5, 10, 10, 10, 15, 15, 20]
+        # 100 -> x2, 101 -> max0, 102 -> 0 ,103 -> ?
+        self.prev_round = 0
+        self.shuffle = False
         
-        self.train_counter = 0
-        self.train_frequency = 10  
-        self.training_in_progress = False
-        self.game_state = deque(maxlen=1000)
         
-        # ゲームメトリクス分析用のインスタンス
-        self.metrics_evaluator = CFRTrainingEvaluator(self.strategy_net, self.advantage_net)
-
-    def _load_model(self):
-        # ログの設定
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s %(levelname)s %(message)s',
-            handlers=[
-                logging.FileHandler("output.log", encoding='utf-8'),
-                logging.StreamHandler()
-            ]
-        )
-  
-        strategy_model_path = "models/strategy_model_317_1.keras"
-        if os.path.exists(strategy_model_path):
-            try:
-                self.strategy_net.model = tf.keras.models.load_model(strategy_model_path)
-                print(f"Loaded existing model from {strategy_model_path}")
-            except Exception as e:
-                print(f"Error loading model: {e}")                
-        # アドバンテージネットワークのモデルを読み込む
-        advantage_model_path = "models/advantage_model_317_1.keras"
-        if os.path.exists(advantage_model_path):
-            try:
-                self.advantage_net = tf.keras.models.load_model(advantage_model_path)
-                print(f"Loaded existing advantage model from {advantage_model_path}")
-            except Exception as e:
-                print(f"Error loading advantage model: {e}")   
-
-    def _save_models(self):
- 
-        try:
-            # 戦略ネットワークの保存
-            strategy_model_path = "models/strategy_model_317_1.keras"
-            self.strategy_net.model.save(strategy_model_path)
-            print(f"Saved strategy model to {strategy_model_path}")
-            
-            # アドバンテージネットワークの保存
-            advantage_model_path = "models/advantage_model_317_1.keras"
-            self.advantage_net.save(advantage_model_path)
-            print(f"Saved advantage model to {advantage_model_path}")
-        except Exception as e:
-            print(f"Error saving models: {e}")               
-
-    def AI_player_action(self,others_info, sum, log, player_card, actions, round_num):
-        # カスタムロジックを実装
-        print(f"[SampleClient] AI deciding action based on sum: {sum}, log: {log}, actions: {actions},others_info: {others_info}, round_num: {round_num}" )
-        # 例: ランダムにアクションを選択
-        now_round_num = round_num
-        if now_round_num != self.previous_round_num:
-            self.previous_round_num = now_round_num
-            
-            self.trajectory_value = 0 #ゲームを通してかラウンドごとか
-            others_life = [info["life"] for info in others_info]
-            if (len(self.prev_others_life) == 0):
-                self.prev_others_life = others_life
-            elif others_life == self.prev_others_life:
-                print("コヨーテされた")    
-                self.Is_coyoted = True
-                self.prev_others_life = others_life
-            else:
-                print("コヨーテされていない")
-                self.Is_coyoted = False
-                self.prev_others_life = others_life   
-
-        self.total_sum = sum
-        self.strategy_net.total_sum = sum
-        state = {
-            "others_info": others_info,
-            "legal_action": actions,
-            "log": log,  # 既存のlog情報を使用
-            "sum": sum,
-            "round_num": round_num,
-            "player_card": player_card,
-            "Is_coyoted": self.Is_coyoted
-        }
-
-        if actions is not None and -1 in actions:
-            # 前のプレイヤーの宣言値と場の合計を考慮
-            previous_declaration = actions[1] - 1  # 前のプレイヤーの宣言値
-            current_sum = self.total_sum  # 場の合計
-            
-            if previous_declaration > current_sum:
-                # 前のプレイヤーの宣言が実際の合計より大きい場合                
-                return -1 
-        
-
-        select_action = make_decision(state, self.strategy_net)
-        print(f"選択された行動: {select_action}")
-
-        state = {
-            "others_info": others_info,
-            "legal_action": actions,
-            "log": log,  # 既存のlog情報を使用
-            "sum": sum,
-            "round_num": round_num,
-            "player_card": player_card,
-            "selectaction": select_action,
-            "Is_coyoted": self.Is_coyoted,
-        }
-        self.game_state.append(state.copy())
-        self.metrics_evaluator.evaluate_cfr_training(self.strategy_buffer, self.game_state)
-        prediction_fig = visualize_model_prediction(self.strategy_net, self.game_state)
-       
-        current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-        # ファイル名に日付を追加
-        file_name = f"save_picture/model_predictions_{current_time}.png"        # Save the figure
-        prediction_fig.savefig(file_name)
-        
-        # 宣言回数ベースのメトリクス分析
-        self.analyze_game_metrics()
-        
-        self.strategy_net = train_deepcfr_for_coyote(self, current_state = state)
-        self._save_models()
-
-        RED = '\033[31m'
-        END = '\033[0m'
-        logging.info("select_action: %s" ,select_action)
-        return  select_action
+    @property 
+    def hold_card_random(self):
+        # ランダムなカードをもつ
+        card = random.choice([card for card in self.cards if card < 100])
+        return card
     
-    def analyze_game_metrics(self):
-        """ゲームメトリクスを分析し、結果を可視化する"""
-        # 必要なディレクトリが存在することを確認
-        output_path = "prediction_visualizations"
-        Path(output_path).mkdir(exist_ok=True)
+    def players_card_list(self, others_info):
+        """PLAYERのカードリストを取得する
+        1. others_infoからカード情報を取得
+        2. players_card_listに格納する
+
+        Args:
+            others_info (list[dict]): 他のプレイヤーの情報を格納したリスト
+
+        Returns:
+            list[int]: 他のプレイヤーのカード情報を格納したリスト
+        """
+        N = len(others_info)
+        players_card_list = []
+        for i in range(N):
+            players_card_list.append(others_info[i]["card_info"])
+        return players_card_list
+    
+    # estimateしたものをさらにestimateする。自分のカードが取得することができないので、自分のestimateしたカードは除外されるようにした。
+    def estimate_now_deck(self,players_card_list:list[int]):
+        # すでに出たカードを除外した新しいデッキを作成する
+        if self.shuffle:
+            self.estimate_now_decks_card= [card for card in self.cards if card not in players_card_list]
+            self.shuffle = False
+        else:
+            self.estimate_now_decks_card = [card for card in self.estimate_now_decks_card if card not in players_card_list]
+            if len(self.estimate_now_decks_card) == 0:
+                self.estimate_now_decks_card = [card for card in self.cards if card not in players_card_list]
+                
+        self.estimate_now_decks_card = [card for card in self.estimate_now_decks_card if card < 100]
+        return self.estimate_now_decks_card
+    def calclate_sum(self,players_card_list:list[int]):
+        caluclate_sum = 0
+        number_cards: list[int] = [card for card in players_card_list if card < 100]
+        special_cards: list[int] = [card for card in players_card_list if card >= 100]
+        is_double = False
+        for cards in special_cards:
+            if cards ==103:
+                choice_card = random.choice(self.estimate_now_deck(players_card_list))
+                number_cards.append(choice_card)
+            elif cards == 102:
+                number_cards.append(0)
+                
+            elif cards == 101:
+                max_card_index = number_cards.index(max(number_cards))
+                number_cards[max_card_index] = 0
+                self.shuffle = True
+            elif cards == 100:
+                number_cards.append(0)
+                is_double = True
         
-        # ゲーム状態が十分に溜まってから分析する
-        if len(self.game_state) < 5:
-            logging.info("ゲーム状態が不十分なため、メトリクス分析をスキップします。")
-            return
+        if is_double:
+            caluclate_sum = sum(number_cards) * 2
+        else:
+            caluclate_sum = sum(number_cards)
+        return caluclate_sum
+    
+    
+    
+
+    def AI_player_action(self,others_info, sum, log, actions, round_num):
+        if self.round_number != round_num:
+            self.round_number = round_num
+            self.shuffle = True
+            
+        # カスタムロジックを実装
+        players_card_list = self.players_card_list(others_info)
+        # 自分のカードを推定する。
+        my_card = self.hold_card_random
+        players_card_list.append(my_card)
+        caluclate_sum = self.calclate_sum(players_card_list)
         
-        # 現在のタイムスタンプを取得（ファイル名用）
-        current_time = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        # アクションの方法 上げ幅を5に制限する。
+        if len(actions) == 1:
+            action = actions[0]
+        else:
+            prev_now_declare = actions[1] -1 
+            print('estimate sum', caluclate_sum)
+            if caluclate_sum >= prev_now_declare:
+                action_space = [action for action in actions if action <= caluclate_sum]
+                random_index = random.randint(0, len(action_space)-1)
+                random_five_index = random.randint(0,5)
+                if random_index < random_five_index:
+                    action = action_space[random_index]
+                else:
+                    action = action_space[random_five_index]
+                if action is None:
+                    action = actions[1]
+            else:
+                Epsilon = random.uniform(0, 1)
+                if Epsilon < 0.8:
+                    if len(actions) > 1 :
+                        action = actions[1]
+                    else:
+                        action = actions[0]
+                else:
+                    action = -1
+        if len(log)==0:
+            action = actions[1]
+        print(actions)
+        return action
+    
+class PlusOneClient(ConstClient):
+    def AI_player_action(self,others_info, sum, log, actions, round_num):
+        if self.round_number != round_num:
+            self.round_number = round_num
+            self.shuffle = True
+            
+        # カスタムロジックを実装
+        players_card_list = self.players_card_list(others_info)
+        # 自分のカードを推定する。
+        my_card = self.hold_card_random
+        players_card_list.append(my_card)
+        caluclate_sum = self.calclate_sum(players_card_list)
         
-        try:
-            # ゲームメトリクスを分析
-            self.metrics_evaluator.analyze_game_logs(list(self.game_state), output_path)
-            
-            # 特定のメトリクスのみを更新したファイル名で保存
-            loss_file = self.metrics_evaluator.plot_loss_function_by_declaration(output_path)
-            transition_file = self.metrics_evaluator.plot_declaration_transition_by_declaration(output_path)
-            
-            # タイムスタンプ付きのファイル名でも保存
-            if transition_file:  # ファイルが正常に作成された場合のみ
-                # ファイル名とパスを分離
-                base_path = os.path.dirname(transition_file)
-                # タイムスタンプ付きの新しいファイル名
-                timestamp_file = os.path.join(base_path, f"prediction_{current_time}.png")
-                # 内容をコピー
-                import shutil
-                shutil.copy2(transition_file, timestamp_file)
-                logging.info(f"タイムスタンプ付き分析結果を保存しました: {timestamp_file}")
-            
-        except Exception as e:
-            logging.error(f"メトリクス分析中にエラーが発生しました: {e}")
-      
+        if len(actions) == 1:
+            action = actions[0]
+        else:
+            prev_now_declare = actions[1] -1 
+            print('estimate sum', caluclate_sum)
+            if caluclate_sum >= prev_now_declare:
+                # 基本的に+1を選択する関数
+                action = actions[1]
+            else:
+                action = -1
+        if len(log)==0:
+            action = actions[1]
+        return action
