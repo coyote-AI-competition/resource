@@ -340,6 +340,7 @@ PR/プレゼン動画とコードのエレガントさにより授与される�
 
 - KateSawada賞 副賞 (審査 kate)
 - cAc運営委員長賞 副賞
+- airport賞 副賞 (審査 airport)
 
 ## 団体賞
 
