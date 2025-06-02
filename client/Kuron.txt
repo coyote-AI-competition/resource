@@ -57,8 +57,6 @@ six==1.17.0
 tensorboard==2.16.2
 tensorboard-data-server==0.7.2
 tensorflow==2.16.2
-tensorflow-macos==2.16.2
-tensorflow-metal==1.2.0
 termcolor==3.0.1
 tqdm==4.67.1
 typing_extensions==4.13.1
@@ -68,18 +66,3 @@ Werkzeug==3.1.3
 wheel==0.45.1
 wrapt==1.17.2
 wsproto==1.2.0
-python-socketio
-eventlet
-requests
-tqdm
-websocket-client
-coyote-AI-competition
-ipykernel
-matplotlib
-torch
-torchvision
-numpy
-pandas
-scikit-learn
-schedulefree
-google-genai
