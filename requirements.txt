@@ -4,3 +4,11 @@ requests
 tqdm
 websocket-client
 coyote-AI-competition
+ipykernel
+matplotlib
+torch
+torchvision
+numpy
+pandas
+scikit-learn
+schedulefree

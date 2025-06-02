@@ -134,7 +134,6 @@ class Client:
 
         else: #プレイヤーの場合
             asyncio.run(self.player_action(sum,log_info, actions))
-                         
 
     def on_close_room(self, data):
         print(data["msg"])
