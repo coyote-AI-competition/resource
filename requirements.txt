@@ -70,8 +70,8 @@ wsproto==1.2.0
 python-socketio
 eventlet
 requests
-tqdm
-websocket-client
+# tqdm
+# websocket-client
 coyote-AI-competition
 ipykernel
 matplotlib
