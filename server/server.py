@@ -27,7 +27,7 @@ class Room:
     def __init__(self, room_id):
         self.room_id = room_id
         self.game_num = 0
-        self.round_num = 0
+        self.round_num = 1
         self.players = {}  #  {sid: {"life": int, "card": int, "name": str, "win_num": int, "is_ai" : bool, "others_card_sum" : 0}, ...]}
         self.observers = []  # [sid, sid, ...]
         self.active_players = []  # [(sid, name, is_ai), ...]
@@ -380,7 +380,7 @@ class Server(RoomManager):
 
             current_game_index = room.current_game_index
             total_game_num = room.game_num
-            room.round_num = 0
+            room.round_num = 1
             # プレイヤーのステータスをリセット
             # すべてのプレイヤーをアクティブに
             room.active_players = [
@@ -402,7 +402,7 @@ class Server(RoomManager):
             print(
                 f"Game {current_game_index}/{total_game_num} has started in room {room_id}"
             )
-            # room.deck.reset() #新たなゲーム開始時山札をリセットする
+            room.deck.reset() #新たなゲーム開始時山札をリセットする
             print("deck reset")
             # round_start
             self.round_start({"room_id": room_id, "round_num": 0})
@@ -538,6 +538,7 @@ class Server(RoomManager):
                         ],  # 自分以外のすべてのカードの合計値を計算する
                         "log": log_info,
                         "legal_action": room.legal_action,
+                        "round_num": room.round_num,
                     },
                     to=turn_player_sid,
                 )

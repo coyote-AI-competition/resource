@@ -1,7 +1,7 @@
 import os
 import requests
 import json
-from .not_websocket_client import Client
+from .client import Client
 from google import genai
 from pydantic import BaseModel
 
@@ -18,8 +18,16 @@ class AkazdayoClient(Client):
         llm_model="gemini-2.5-flash-preview-05-20",
     ):
         super().__init__(player_name=player_name, is_ai=is_ai)
-        self.model = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-        self.llm_model = llm_model
+        api_key = os.getenv("GEMINI_API_KEY")
+        if api_key:
+            self.model = genai.Client(api_key=api_key)
+            self.llm_model = llm_model
+            self.use_api = True
+        else:
+            print("Warning: GEMINI_API_KEY not found. Using fallback strategy.")
+            self.model = None
+            self.llm_model = None
+            self.use_api = False
 
     def AI_player_action(self, others_info, sum, log, actions, round_num):
         prompt = self._build_prompt(others_info, sum, log, actions, round_num)

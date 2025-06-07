@@ -1,6 +1,6 @@
-from .not_websocket_client import Client
+from .client import Client
 class BaseLine(Client):
-    def AI_player_action(self,sum,actions):
+    def AI_player_action(self,others_info, sum, log, actions, round_num):
         if(len(actions) == 1):
             return actions[0]
         current_action = actions[1] - 1 

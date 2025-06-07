@@ -1,5 +1,5 @@
 from .hamao_melo_library.main import MyLibrary
-from .not_websocket_client import Client
+from .client import Client
 
 
 class HamaoNiMeloMelo(Client):

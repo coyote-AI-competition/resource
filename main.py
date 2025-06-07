@@ -1,5 +1,9 @@
 from client.sample_client import SampleClient
-
+from client.Back_file import SampleClient as BackClient
+from client.yaduya_agent import PlayerReinforce as PlayerReinforce
+from client.hamao_ni_melomelo import HamaoNiMeloMelo as ClientHamaoNiMeloMelo   
+from client.akazdayo_client import AkazdayoClient as AkazdayoClient
+    
 if __name__ == "__main__":
     is_player = input("Are you a player? (y/N): ").strip().lower()
     if is_player == 'y':
@@ -8,7 +12,7 @@ if __name__ == "__main__":
         is_ai = input("Are you an AI? (y/N): ").strip().lower()
         if is_ai == 'y':
             player_name = input("Enter player name (default: player1): ") or "player1"
-            client = SampleClient(int(port), room_id, player_name, is_ai=True)
+            client = PlayerReinforce("yazuya", is_ai=True)
             is_ai = True
         else:
             player_name = input("Enter player name (default: player1): ") or "player1"

@@ -112,10 +112,13 @@ def encode_state(state):
     action_mask = [0] * (max_action_value + 1)
     
     for action in legal_action:
-        if 0 <= action <= max_action_value:
+        if 0 <= action < max_action_value:
+            print(f"Action: {action}")
             action_mask[action+1] = 1
         elif action == -1:
-            action_mask[0] = 1    
+            action_mask[0] = 1 
+        else:
+            continue;       
     
     # すべての特徴を連結
     features = player_features + [sum_normalized , round_normalized] + turn_features + action_mask

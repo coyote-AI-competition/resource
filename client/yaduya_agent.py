@@ -1,5 +1,5 @@
 from typing import Literal
-from .not_websocket_client import Client
+from .client import Client
 import random
 from .yaduya.logic import *  # または必要な関数/クラス名を指定
 from .yaduya.replay import ReplayBuffer

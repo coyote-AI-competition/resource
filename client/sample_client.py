@@ -2,7 +2,7 @@ from .client import Client
 import random
 
 class SampleClient(Client):
-    def __init__(self):
+    def __init__(self,port=5000, room_id="test-room", player_name="player1", is_ai=False):
         super().__init__()
         
         

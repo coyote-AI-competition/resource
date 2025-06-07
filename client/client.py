@@ -102,6 +102,7 @@ class Client:
                             "sum": sum([player["card_info"] for player in others_info]),
                             "log": log_info,
                             "legal_action": legal_action
+                            "round_num": round_num
                         },
         """
         others_info = turn_data["others_info"]
@@ -112,6 +113,8 @@ class Client:
         print(f"Log: {log_info}")
         legal_actions = turn_data["legal_action"]
         print(f"Possible actions: {legal_actions}")
+        round_num = turn_data["round_num"]
+        print(f"Round number: {round_num}")
 
         min_range = legal_actions[1]
         max_range = legal_actions[2]
@@ -123,7 +126,7 @@ class Client:
 
         #プレイヤーに引数を渡す
         if self.is_ai: #AIの場合
-            action = self.AI_player_action(others_info,sum,log_info, actions)
+            action = self.AI_player_action(others_info,sum,log_info, actions, round_num)
             if action not in actions: #アクションが不正な場合
                 print(f"Invalid action: {action}")
                 # ランダムにアクションを選択
@@ -153,7 +156,7 @@ class Client:
         if self.timer:
          self.timer.cancel()
         try:
-            self.timer = threading.Timer(10, lambda: self.auto_action(actions))
+            self.timer = threading.Timer(0.1, lambda: self.auto_action(actions))
             self.timer.start()
             print("Timer started.")
             action = int(input(f"Enter action ({actions}): "))

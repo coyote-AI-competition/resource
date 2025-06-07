@@ -1,4 +1,4 @@
-from .not_websocket_client import Client
+from .client import Client
 from .Back.make_decision import make_decision
 from .Back.StrategyNetwork import StrategyNetwork
 from .Back.reservoirbuffer import ReservoirBuffer
@@ -202,6 +202,7 @@ class SampleClient(Client):
                      self.deck.cards.remove(card) # 場のカードを山札から削除する
                   else:
                      self.deck.reset()
+                     print(f"Card {card} not found in deck, resetting deck.")
                      self.deck.cards.remove(card) # 場のカードを山札から削除する
                 else:
                     self.deck.reset()
