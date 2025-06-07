@@ -6,12 +6,6 @@ import random
 import coyote
 import os
 from collections import defaultdict
-from client.Back_file import SampleClient as BackClient
-from client.yaduya_agent import PlayerReinforce as PlayerReinforce
-from client.MJ import ClientMJ as ClientMJ
-from client.Kuron import Kuron as ClientKuron
-from client.hamao_ni_melomelo import HamaoNiMeloMelo as ClientHamaoNiMeloMelo   
-from client.akazudayo import BaseLine as ClientBaseLine
 
 
 class RoomManager:
@@ -57,14 +51,6 @@ class Room:
             lambda: defaultdict(int)
         )  # 死亡したプレイヤーのランキング
         # self.cashed_cards = self.deck.cashed_cards.copy()
-        self.predefs = [
-            [BackClient(player_name="PreAI1", is_ai=True), "PreAI1"],
-            [PlayerReinforce(player_name="PreAI2", is_ai=True), "PreAI2"],
-            [ClientMJ(player_name="PreAI3", is_ai=True), "PreAI3"],
-            [ClientKuron(player_name="PreAI4", is_ai=True), "PreAI4"],
-            [ClientHamaoNiMeloMelo(player_name="PreAI5", is_ai=True), "PreAI5"],
-            [ClientBaseLine(player_name="PreAI6", is_ai=True), "PreAI6"],
-        ]
 
     def draw_card(self):
         return coyote.game.server_draw_card(self.deck)
@@ -98,16 +84,6 @@ class Room:
             "others_card_sum": 0,
         }
         self.active_players.append((sid, player_name, is_ai))
-
-    def add_predefined_ais_to_room(self, room_id):
-        room = self.rooms.get_room(room_id)
-        if not room:
-            return
-        for ai_client, ai_name in self.predefs:
-            # 通常の人間とは異なるSIDとして扱うため、仮SIDを生成
-            fake_sid = f"ai_{ai_name}_{random.randint(1000, 9999)}"
-            room.add_player(fake_sid, ai_name, is_ai=True)
-            print(f"AI {ai_name} joined room {room_id} as {fake_sid}")
 
     def remove_player(self, player_sid):
         self.players.pop(player_sid, None)
@@ -316,6 +292,9 @@ class Server(RoomManager):
 
         # すでにルームが存在するか確認
         room = self.rooms.get_room(room_id)
+        print("room_id", room_id)
+        print("check room", room)
+        print("check room.is_started", room.is_started if room else "No room")
         if (
             room and sid not in room.start_players and room.is_started
         ):  # Changed is_start to is_started
