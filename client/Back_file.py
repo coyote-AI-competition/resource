@@ -233,7 +233,8 @@ class SampleClient(Client):
         logger.info(f"current_state: {current_state}")
         select_action = make_decision(current_state, self.strategy_net)
         logger.info(f"select_action: {select_action}")
-        
+        if len(actions) == 1:
+            return actions[0]
         if(actions[1] + 5 <= select_action):
             select_action = actions[1] + 5
 

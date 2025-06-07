@@ -227,8 +227,8 @@ class Arena:
             # otherカード合計
             other_cards = [p.hold_card for p in self.active_players if p != current_player]
             
-            # sum_of_others = self.sum_of_others_cards(other_cards)
-            sum_of_others = self.convert_card(other_cards, True)
+            sum_of_others = self.sum_of_others_cards(other_cards)
+            #sum_of_others = self.convert_card(other_cards, True)
             if turn_count == 0:
                 legal_actions = [1, 1, 140]
             else:

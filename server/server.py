@@ -464,7 +464,6 @@ class Server(RoomManager):
                     )
                 print(f"sum is {room.players[turn_player_sid]["others_card_sum"]}")
                 # print(f"{turn_player_sid} turn start!")
-                #TODO 追加しました（ドキュメントの更新など）
                 for to_player_sid, _ in room.players.items():
                     others_info = get_others_info(to_player_sid)
                     self.sio.emit(
@@ -476,6 +475,7 @@ class Server(RoomManager):
                                 "others_info": others_info,
                                 "sum": room.players[to_player_sid]["others_card_sum"], #自分以外のすべてのカードの合計値を計算する
                                 "log": log_info
+                                "legal_action": room.legal_action
                             },
                             to=to_player_sid
                         )
